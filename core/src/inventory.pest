@@ -1,0 +1,22 @@
+// DUT Inventory Notation
+// ======================
+//
+// Accepts input like "A=1-50, B=51-100" and returns it as a list of groups
+// containing ranges of units.
+
+units = { groups | ranges }
+
+groups = { group ~ (comma? ~ group)* }
+group = { group_name ~ "=" ~ ranges }
+
+alpha = { 'a'..'z' | 'A'..'Z' }
+digit = { '0'..'9' }
+comma = _{ "," }
+group_name = { ("_" | "-" | alpha | digit)+ }
+
+ranges = { range ~ (comma ~ whitespace ~ range)* }
+range = { (number ~ "-" ~ number) | number }
+
+number = { digit+ }
+
+whitespace = _{ ("\t" | "\n" | "\r")+ }

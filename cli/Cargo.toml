@@ -1,0 +1,8 @@
+[package]
+name = "split-units"
+version = "0.1.0"
+authors = ["LeRoyce Pearson <leroycepearson@geemili.xyz>"]
+
+[dependencies]
+unit-splitter-core = { path = "../core/" }
+quicli = "0.2"

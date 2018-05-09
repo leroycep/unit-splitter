@@ -1,0 +1,43 @@
+// DUT Inventory Notation
+// ======================
+//
+// Accepts input like "A=1-50, B=51-100" and returns it as a list of groups
+// containing ranges of units.
+
+pub parse_units -> Vec<(Option<&'input str>, Vec<(u32, u32)>)>
+    = groups:groups { groups.iter().map( |(name, ranges)| (Some(*name), ranges.clone()) ).collect() }
+    / ranges:ranges { vec![ (None, ranges) ] }
+
+groups -> Vec<(&'input str, Vec<(u32, u32)>)>
+    = head:group tail:(comma? _? g:group {g})* {
+        let mut groups = vec![head];
+        groups.extend_from_slice(&tail);
+        groups
+    }
+
+group -> (&'input str, Vec<(u32, u32)>)
+    = name:group_name "=" ranges:ranges { (name, ranges) }
+
+group_name -> &'input str
+    = $("_" / "-" / alpha / digit)+
+
+ranges -> Vec<(u32, u32)>
+    = head:range tail:(comma _? r:range {r})* {
+        let mut ranges = vec![head];
+        ranges.extend_from_slice(&tail);
+        ranges
+    }
+
+range -> (u32, u32)
+    = (first:number "-" last:number { (first, last) })
+    / num:number { (num, num) }
+
+number -> u32
+    = n:$(digit+) { n.parse().unwrap() }
+
+alpha = [a-zA-Z]
+digit = [0-9]
+comma = ","
+
+whitespace = [ \t\n\r]+
+_ = whitespace
