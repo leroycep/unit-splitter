@@ -21,8 +21,5 @@ in
       myrust
       pkgconfig
       openssl
-      python2
-      nodejs-8_x
-      emscripten
     ];
   }
