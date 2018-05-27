@@ -5,11 +5,11 @@ extern crate unit_splitter_core as core;
 extern crate slab;
 
 use std::collections::HashMap;
-use stdweb::web::Date;
 use yew::prelude::*;
 use yew::services::console::ConsoleService;
-use core::unit_requests::UnitRequests;
 use slab::Slab;
+use core::parse::parse_units;
+use core::range::Range;
 
 #[derive(PartialEq, Eq, Hash)]
 pub struct AmountId {
@@ -17,10 +17,13 @@ pub struct AmountId {
     group_id: usize,
 }
 
+type GroupId = usize;
+
 pub struct Model {
     unit_string: String,
     tests: Slab<String>,
     groups: Slab<String>,
+    group_ranges: HashMap<GroupId, Vec<Range>>,
     requests: HashMap<AmountId, u32>,
 }
 
@@ -40,13 +43,11 @@ where
     type Properties = ();
 
     fn create(_: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
-        let mut groups = Slab::new();
-        groups.insert("A".into());
-        groups.insert("B".into());
         Model {
             unit_string: "".into(),
             tests: Slab::new(),
-            groups: groups,
+            groups: Slab::new(),
+            group_ranges: HashMap::new(),
             requests: HashMap::new(),
         }
     }
@@ -56,6 +57,19 @@ where
             Msg::GotUnits(value) => {
                 self.unit_string = value;
                 context.as_mut().log("unit string updated");
+                let parse = parse_units(&self.unit_string);
+                context.as_mut().log(&format!("parse: {:?}", parse));
+                match parse {
+                    Ok(parse) => {
+                        context.as_mut().log(&format!("parse: {:?}", parse));
+                        self.groups.clear();
+                        for group in parse {
+                            let group_id = self.groups.insert(group.name().to_string());
+                            self.group_ranges.insert(group_id, group.ranges().to_vec());
+                        }
+                    }
+                    Err(_) => { }
+                }
             }
             Msg::EditTestName(idx, value) => {
                 self.tests[idx] = value;

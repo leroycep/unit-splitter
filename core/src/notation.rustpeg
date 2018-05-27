@@ -9,7 +9,7 @@ use range::Range;
 
 pub parse_units -> Vec<Group>
     = groups:groups { groups }
-    / ranges:ranges { vec![ Group::new(None, ranges) ] }
+    / ranges:ranges { vec![ Group::new("".to_string(), ranges) ] }
 
 groups -> Vec<Group>
     = head:group tail:(comma? _? g:group {g})* {
@@ -19,7 +19,7 @@ groups -> Vec<Group>
     }
 
 group -> Group
-    = name:group_name "=" ranges:ranges { Group::new(Some(name.to_string()), ranges) }
+    = name:group_name "=" ranges:ranges { Group::new(name.to_string(), ranges) }
 
 group_name -> &'input str
     = $("_" / "-" / alpha / digit)+
