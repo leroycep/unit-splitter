@@ -1,0 +1,10 @@
+[package]
+name = "unit_splitter_web"
+version = "0.1.0"
+authors = ["LeRoyce Pearson <leroycepearson@geemili.xyz>"]
+
+[dependencies]
+stdweb = "0.4"
+yew = "0.3"
+unit-splitter-core = { path = "../core" }
+slab = "0.4"
