@@ -11,11 +11,17 @@ use yew::services::console::ConsoleService;
 use core::unit_requests::UnitRequests;
 use slab::Slab;
 
+#[derive(PartialEq, Eq, Hash)]
+pub struct AmountId {
+    test_id: usize,
+    group_id: usize,
+}
+
 pub struct Model {
     unit_string: String,
     tests: Slab<String>,
     groups: Slab<String>,
-    requests: HashMap<(usize, usize), u32>,
+    requests: HashMap<AmountId, u32>,
 }
 
 pub enum Msg {
@@ -23,7 +29,7 @@ pub enum Msg {
     EditTestName(usize, String),
     RemoveTest(usize),
     AddTest,
-    EditAmount(usize, usize, String),
+    EditAmount(AmountId, String),
 }
 
 impl<CTX> Component<CTX> for Model
@@ -63,10 +69,10 @@ where
                 self.tests.insert(String::new());
                 context.as_mut().log("added test");
             }
-            Msg::EditAmount(test_id, group_id, amount_string) => {
+            Msg::EditAmount(amount_id, amount_string) => {
                 if let Ok(amount) = amount_string.parse() {
-                    self.requests.insert((test_id, group_id), amount);
-                    context.as_mut().log("added test");
+                    self.requests.insert(amount_id, amount);
+                    context.as_mut().log("edited amount");
                 }
             }
         }
@@ -99,7 +105,7 @@ where
                 </div>
                 <div>
                     <h1>{ "Output" }</h1>
-                    { for self.requests.iter().map(|((test_id, group_id), amount)| html! { <p>{
+                    { for self.requests.iter().map(|(AmountId {test_id, group_id}, amount)| html! { <p>{
                                                   format!("{}, {}: {}", self.tests.get(*test_id).map(|s| s.as_str()).unwrap_or_else(|| "undefined"),
                                                          self.groups.get(*group_id).map(|s| s.as_str()).unwrap_or_else(|| "undefined"),
                                                          amount)}</p>
@@ -154,25 +160,13 @@ impl Model {
     where
         CTX: AsMut<ConsoleService> + 'static
     {
-        let amount = self.requests.get(&(test_id, group_id)).map(|e| e.to_string()).unwrap_or_else(|| "".to_string());
+        let amount = self.requests.get(&AmountId {test_id, group_id}).map(|e| e.to_string()).unwrap_or_else(|| "".to_string());
         html! {
             <input
                 type="number",
                 value=amount,
-                oninput=move |e: InputData| Msg::EditAmount(test_id, group_id, e.value),>
+                oninput=move |e: InputData| Msg::EditAmount(AmountId { test_id, group_id }, e.value),>
             </input>
         }
-    }
-}
-
-fn view_div<CTX>(left: Html<CTX, Model>, right: Html<CTX, Model>) -> Html<CTX, Model>
-where
-    CTX: AsMut<ConsoleService> + 'static
-{
-    html! {
-        <div>
-            {left}
-            {right}
-        </div>
     }
 }
