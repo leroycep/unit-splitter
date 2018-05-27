@@ -2,18 +2,18 @@
 use range::Range;
 
 #[derive(PartialEq, Clone, Debug)]
-pub struct Group<'name> {
-    name: Option<&'name str>,
+pub struct Group {
+    name: Option<String>,
     ranges: Vec<Range>,
 }
 
-impl<'name> Group<'name> {
-    pub fn new(name: Option<&'name str>, ranges: Vec<Range>) -> Self {
+impl Group {
+    pub fn new(name: Option<String>, ranges: Vec<Range>) -> Self {
         Self { name, ranges }
     }
 
-    pub fn name(&self) -> Option<&str> {
-        self.name
+    pub fn name(&self) -> Option<String> {
+        self.name.clone()
     }
 
     pub fn ranges(&self) -> &[Range] {
@@ -33,6 +33,6 @@ mod tests {
     #[test]
     fn it_works() {
         let range = Range::new(1, 50);
-        let _group = Group::new("A".into(), vec![range]);
+        let _group = Group::new(Some("A".into()), vec![range]);
     }
 }

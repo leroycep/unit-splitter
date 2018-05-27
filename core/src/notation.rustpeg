@@ -4,33 +4,36 @@
 // Accepts input like "A=1-50, B=51-100" and returns it as a list of groups
 // containing ranges of units.
 
-pub parse_units -> Vec<(Option<&'input str>, Vec<(u32, u32)>)>
-    = groups:groups { groups.iter().map( |(name, ranges)| (Some(*name), ranges.clone()) ).collect() }
-    / ranges:ranges { vec![ (None, ranges) ] }
+use group::Group;
+use range::Range;
 
-groups -> Vec<(&'input str, Vec<(u32, u32)>)>
+pub parse_units -> Vec<Group>
+    = groups:groups { groups }
+    / ranges:ranges { vec![ Group::new(None, ranges) ] }
+
+groups -> Vec<Group>
     = head:group tail:(comma? _? g:group {g})* {
         let mut groups = vec![head];
         groups.extend_from_slice(&tail);
         groups
     }
 
-group -> (&'input str, Vec<(u32, u32)>)
-    = name:group_name "=" ranges:ranges { (name, ranges) }
+group -> Group
+    = name:group_name "=" ranges:ranges { Group::new(Some(name.to_string()), ranges) }
 
 group_name -> &'input str
     = $("_" / "-" / alpha / digit)+
 
-ranges -> Vec<(u32, u32)>
+ranges -> Vec<Range>
     = head:range tail:(comma _? r:range {r})* {
         let mut ranges = vec![head];
         ranges.extend_from_slice(&tail);
         ranges
     }
 
-range -> (u32, u32)
-    = (first:number "-" last:number { (first, last) })
-    / num:number { (num, num) }
+range -> Range
+    = (first:number "-" last:number { Range::new(first, last) })
+    / num:number { Range::new(num, num) }
 
 number -> u32
     = n:$(digit+) { n.parse().unwrap() }
