@@ -2,7 +2,7 @@
 with pkgs;
 
 let
-  myrustchannel = (rustChannelOf { date = "2018-04-19"; channel = "nightly"; });
+  myrustchannel = (rustChannelOf { date = "2018-05-23"; channel = "nightly"; });
 in
 let
   myrust = (myrustchannel.rust.override {
@@ -21,5 +21,6 @@ in
       myrust
       pkgconfig
       openssl
+      python2
     ];
   }
