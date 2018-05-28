@@ -20,7 +20,7 @@ impl Group {
         &self.ranges
     }
 
-    pub fn count(&self) -> u32 {
+    pub fn count(&self) -> usize {
         self.ranges.iter().map(|r| r.count()).sum()
     }
 }

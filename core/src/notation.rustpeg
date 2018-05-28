@@ -35,8 +35,8 @@ range -> Range
     = (first:number "-" last:number { Range::new(first, last) })
     / num:number { Range::new(num, num) }
 
-number -> u32
-    = n:$(digit+) { n.parse().unwrap() }
+number -> usize
+    = n:$(digit+) !alpha { n.parse().unwrap() }
 
 alpha = [a-zA-Z]
 digit = [0-9]

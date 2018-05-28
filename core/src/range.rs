@@ -1,28 +1,37 @@
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Range {
-    first: u32,
-    last: u32,
+    first: usize,
+    last: usize,
 }
 
 impl Range {
-    pub fn new(first: u32, last: u32) -> Self {
+    pub fn new(first: usize, last: usize) -> Self {
         Self { first, last }
     }
 
-    pub fn first(&self) -> u32 {
+    pub fn first(&self) -> usize {
         self.first
     }
 
-    pub fn last(&self) -> u32 {
+    pub fn last(&self) -> usize {
         self.last
     }
 
-    pub fn count(&self) -> u32 {
+    pub fn count(&self) -> usize {
         self.last - self.first + 1
     }
 
-    pub fn split(&self, amount: u32) -> (Self, Option<Self>, u32) {
+    pub fn write_to_string(&self, string: &mut String) {
+        use std::fmt::Write;
+        if self.first == self.last {
+            write!(string, "{}", self.first);
+        } else {
+            write!(string, "{}-{}", self.first, self.last);
+        }
+    }
+
+    pub fn split(&self, amount: usize) -> (Self, Option<Self>, usize) {
         assert!(amount != 0);
         if amount >= self.count() {
             (self.clone(), None, amount - self.count())
