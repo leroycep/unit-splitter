@@ -4,27 +4,21 @@ extern crate yew;
 extern crate unit_splitter_core as core;
 extern crate slab;
 
+use std::collections::VecDeque;
 use std::collections::HashMap;
 use yew::prelude::*;
 use yew::services::console::ConsoleService;
 use slab::Slab;
 use core::parse::parse_units;
 use core::range::Range;
-
-#[derive(PartialEq, Eq, Hash)]
-pub struct AmountId {
-    test_id: usize,
-    group_id: usize,
-}
-
-type GroupId = usize;
+use core::split::{RequestId, GroupId};
 
 pub struct Model {
     unit_string: String,
     tests: Slab<String>,
     groups: Slab<String>,
-    group_ranges: HashMap<GroupId, Vec<Range>>,
-    requests: HashMap<AmountId, u32>,
+    group_ranges: HashMap<GroupId, VecDeque<Range>>,
+    requests: HashMap<RequestId, usize>,
 }
 
 pub enum Msg {
@@ -32,7 +26,7 @@ pub enum Msg {
     EditTestName(usize, String),
     RemoveTest(usize),
     AddTest,
-    EditAmount(AmountId, String),
+    EditAmount(RequestId, String),
 }
 
 impl<CTX> Component<CTX> for Model
@@ -65,7 +59,7 @@ where
                         self.groups.clear();
                         for group in parse {
                             let group_id = self.groups.insert(group.name().to_string());
-                            self.group_ranges.insert(group_id, group.ranges().to_vec());
+                            self.group_ranges.insert(group_id, group.ranges().to_vec().into());
                         }
                     }
                     Err(_) => { }
@@ -117,14 +111,7 @@ where
                     </div>
                     <button onclick=|_| Msg::AddTest,>{ "[+]" }</button>
                 </div>
-                <div>
-                    <h1>{ "Output" }</h1>
-                    { for self.requests.iter().map(|(AmountId {test_id, group_id}, amount)| html! { <p>{
-                                                  format!("{}, {}: {}", self.tests.get(*test_id).map(|s| s.as_str()).unwrap_or_else(|| "undefined"),
-                                                         self.groups.get(*group_id).map(|s| s.as_str()).unwrap_or_else(|| "undefined"),
-                                                         amount)}</p>
-                                                  }) }
-                </div>
+                { self.view_output() }
             </div>
         }
     }
@@ -174,13 +161,57 @@ impl Model {
     where
         CTX: AsMut<ConsoleService> + 'static
     {
-        let amount = self.requests.get(&AmountId {test_id, group_id}).map(|e| e.to_string()).unwrap_or_else(|| "".to_string());
+        let amount = self.requests.get(&RequestId {test_id, group_id}).map(|e| e.to_string()).unwrap_or_else(|| "".to_string());
         html! {
             <input
                 type="number",
                 value=amount,
-                oninput=move |e: InputData| Msg::EditAmount(AmountId { test_id, group_id }, e.value),>
+                oninput=move |e: InputData| Msg::EditAmount(RequestId { test_id, group_id }, e.value),>
             </input>
+        }
+    }
+
+    fn view_output<CTX>(&self) -> Html<CTX, Model>
+    where
+        CTX: AsMut<ConsoleService> + 'static
+    {
+        use core::split::split;
+        let (used_ranges, unused_ranges) = split(&self.group_ranges, &self.requests).unwrap();
+        html! {
+            <div>
+                <h1>{ "Output" }</h1>
+                { for used_ranges.iter().map(|(test_id, ranges)| self.view_test_ranges(&self.tests[*test_id], ranges)) }
+                { self.view_test_ranges("Unused ranges", &unused_ranges) }
+            </div>
+        }
+    }
+
+    fn view_test_ranges<CTX>(&self, test_name: &str, group_ranges: &core::split::Ranges) -> Html<CTX, Model>
+    where
+        CTX: AsMut<ConsoleService> + 'static
+    {
+        let mut ranges_string = String::new();
+        let mut should_have_comma_groups = false;
+        for (group_id, ranges) in group_ranges.iter() {
+            if should_have_comma_groups {
+                ranges_string.push_str(", ");
+            }
+            ranges_string.push_str(&self.groups[*group_id]);
+            ranges_string.push_str("=");
+            let mut should_have_comma = false;
+            for range in ranges.iter() {
+                if should_have_comma {
+                    ranges_string.push_str(", ");
+                }
+                range.write_to_string(&mut ranges_string);
+                should_have_comma = true;
+            }
+            should_have_comma_groups = true;
+        }
+        html! {
+            <div>
+                <span>{test_name}{": "}{ranges_string}</span>
+            </div>
         }
     }
 }
