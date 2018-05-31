@@ -94,10 +94,11 @@ where
 {
     fn view(&self) -> Html<CTX, Self> {
         html! {
-            <div>
+            <div class="body",>
                 <div>
                     <h1>{ "Units" }</h1>
-                    <input type="text",
+                    <input class="indent",
+                        type="text",
                         value=&self.unit_string,
                         oninput=|e: InputData| Msg::GotUnits(e.value),
                         placeholder="enter unit string",>
@@ -105,11 +106,13 @@ where
                 </div>
                 <div>
                     <h1>{ "Requests" }</h1>
-                    <div>
-                        <div><span>{"Test Name"}</span>{ self.view_group_headers() }</div>
-                        { for self.tests.iter().map(|(i,name)| self.view_test(i, name)) }
+                    <div class="indent",>
+                        <table>
+                            <tr><td></td><td>{"Test Name"}</td>{ self.view_group_headers() }</tr>
+                            { for self.tests.iter().map(|(i,name)| self.view_test(i, name)) }
+                            <tr><td><button class="button", onclick=|_| Msg::AddTest,>{ "[+]" }</button></td></tr>
+                        </table>
                     </div>
-                    <button onclick=|_| Msg::AddTest,>{ "[+]" }</button>
                 </div>
                 { self.view_output() }
             </div>
@@ -123,9 +126,7 @@ impl Model {
         CTX: AsMut<ConsoleService> + 'static
     {
         html! {
-            <span>
-                { for self.groups.iter().map(|(_id, name)| html! { <span>{name}</span> }) }
-            </span>
+            { for self.groups.iter().map(|(_id, name)| html! { <td>{name}</td> }) }
         }
     }
 
@@ -134,15 +135,15 @@ impl Model {
         CTX: AsMut<ConsoleService> + 'static
     {
         html! {
-            <div>
-                <button onclick=move |_| Msg::RemoveTest(test_id),>{ "[-]" }</button>
-                <input
+            <tr>
+                <td><button class="button", onclick=move |_| Msg::RemoveTest(test_id),>{ "[-]" }</button></td>
+                <td><input
                     type="text",
                     value=name,
                     oninput=move |e: InputData| Msg::EditTestName(test_id, e.value),
-                    placeholder="enter test name",></input>
+                    placeholder="enter test name",></input></td>
                 { self.view_requests(test_id) }
-            </div>
+            </tr>
         }
     }
 
@@ -151,9 +152,7 @@ impl Model {
         CTX: AsMut<ConsoleService> + 'static
     {
         html! {
-            <span>
-                { for self.groups.iter().map(|(group_id, _v)| self.view_request(test_id, group_id)) }
-            </span>
+            { for self.groups.iter().map(|(group_id, _v)| html!{ <td>{ self.view_request(test_id, group_id) }</td> }) }
         }
     }
 
@@ -180,8 +179,10 @@ impl Model {
         html! {
             <div>
                 <h1>{ "Output" }</h1>
-                { for used_ranges.iter().map(|(test_id, ranges)| self.view_test_ranges(&self.tests[*test_id], ranges)) }
-                { self.view_test_ranges("Unused ranges", &unused_ranges) }
+                <div class="indent",>
+                    { for used_ranges.iter().map(|(test_id, ranges)| self.view_test_ranges(&self.tests[*test_id], ranges)) }
+                    { self.view_test_ranges("Unused ranges", &unused_ranges) }
+                </div>
             </div>
         }
     }
