@@ -16,7 +16,7 @@ use core::split::{RequestId, GroupId, TestId};
 pub struct Model {
     unit_string: String,
     tests: Slab<String>,
-    groups: Slab<String>,
+    groups: Vec<String>,
     test_order: Vec<TestId>,
     group_ranges: HashMap<GroupId, VecDeque<Range>>,
     requests: HashMap<RequestId, usize>,
@@ -41,7 +41,7 @@ where
         Model {
             unit_string: "".into(),
             tests: Slab::new(),
-            groups: Slab::new(),
+            groups: Vec::new(),
             group_ranges: HashMap::new(),
             test_order: vec![],
             requests: HashMap::new(),
@@ -60,7 +60,8 @@ where
                         context.as_mut().log(&format!("parse: {:?}", parse));
                         self.groups.clear();
                         for group in parse {
-                            let group_id = self.groups.insert(group.name().to_string());
+                            let group_id = self.groups.len();
+                            self.groups.push(group.name().to_string());
                             self.group_ranges.insert(group_id, group.ranges().to_vec().into());
                         }
                     }
@@ -138,7 +139,7 @@ impl Model {
         CTX: AsMut<ConsoleService> + 'static
     {
         html! {
-            { for self.groups.iter().map(|(_id, name)| html! { <td>{name}</td> }) }
+            { for self.groups.iter().map(|name| html! { <td>{name}</td> }) }
         }
     }
 
@@ -165,7 +166,7 @@ impl Model {
         CTX: AsMut<ConsoleService> + 'static
     {
         html! {
-            { for self.groups.iter().map(|(group_id, _v)| html!{ <td>{ self.view_request(test_id, group_id) }</td> }) }
+            { for self.groups.iter().enumerate().map(|(group_id, _v)| html!{ <td>{ self.view_request(test_id, group_id) }</td> }) }
         }
     }
 
@@ -188,7 +189,8 @@ impl Model {
         CTX: AsMut<ConsoleService> + 'static
     {
         use core::split::split;
-        let (used_ranges, unused_ranges) = split(&self.group_ranges, &self.requests).unwrap();
+        let groups: Vec<_> = (0 .. self.groups.len()).collect();
+        let (used_ranges, unused_ranges) = split(&self.group_ranges, &self.requests, &self.test_order[..], &groups[..]).unwrap();
         html! {
             <div>
                 <h1>{ "Output" }</h1>
