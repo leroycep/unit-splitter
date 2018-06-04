@@ -19,7 +19,7 @@ groups -> Vec<Group>
     }
 
 group -> Group
-    = name:group_name "=" ranges:ranges { Group::new(name.to_string(), ranges) }
+    = name:group_name equals ranges:ranges { Group::new(name.to_string(), ranges) }
 
 group_name -> &'input str
     = $("_" / "-" / alpha / digit)+
@@ -36,11 +36,12 @@ range -> Range
     / num:number { Range::new(num, num) }
 
 number -> usize
-    = n:$(digit+) !alpha { n.parse().unwrap() }
+    = n:$(digit+) !(alpha / equals) { n.parse().unwrap() }
 
 alpha = [a-zA-Z]
 digit = [0-9]
 comma = ","
+equals = "="
 
 whitespace = [ \t\n\r]+
 _ = whitespace

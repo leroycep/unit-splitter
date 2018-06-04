@@ -46,4 +46,13 @@ mod tests {
         ];
         assert_eq!(::parse::parse_units("995N=1-50, 998N=51-100"), Ok(expected));
     }
+
+    #[test]
+    fn group_name_is_a_number() {
+        let expected = vec![
+            Group::new("995".into(), vec![Range::new(1, 50)]),
+            Group::new("998".into(), vec![Range::new(51, 100)]),
+        ];
+        assert_eq!(::parse::parse_units("995=1-50, 998=51-100"), Ok(expected));
+    }
 }
