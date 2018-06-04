@@ -195,8 +195,14 @@ impl Model {
                 <div>
                     <h1>{ "Output" }</h1>
                     <div class="indent",>
-                        { for used_ranges.iter().map(|(test_id, ranges)| self.view_test_ranges(&self.tests[*test_id], ranges)) }
-                        { self.view_test_ranges("Unused ranges", &unused_ranges) }
+                        <div>{
+                            for self.test_order.iter().map(|&test_id| {
+                                let name = &self.tests[test_id];
+                                let ranges = used_ranges.get(&test_id).expect("all requests should end up in `used_ranges`");
+                                self.view_test_ranges(name, ranges)
+                            })
+                        }</div>
+                        <div>{ self.view_test_ranges("Unused ranges", &unused_ranges) }</div>
                     </div>
                 </div>
             },
@@ -217,11 +223,17 @@ impl Model {
     {
         let mut ranges_string = String::new();
         let mut should_have_comma_groups = false;
-        for (group_id, ranges) in group_ranges.iter() {
+        for (group_id, group_name) in self.groups.iter().enumerate() {
+            let ranges = group_ranges.get(&group_id);
+            if ranges.is_none() {
+                continue;
+            }
+            let ranges = ranges.expect("loop will continue if this is none");
+
             if should_have_comma_groups {
                 ranges_string.push_str(", ");
             }
-            ranges_string.push_str(&self.groups[*group_id]);
+            ranges_string.push_str(group_name);
             ranges_string.push_str("=");
             let mut should_have_comma = false;
             for range in ranges.iter() {
