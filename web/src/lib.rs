@@ -11,12 +11,13 @@ use yew::services::console::ConsoleService;
 use slab::Slab;
 use core::parse::parse_units;
 use core::range::Range;
-use core::split::{RequestId, GroupId};
+use core::split::{RequestId, GroupId, TestId};
 
 pub struct Model {
     unit_string: String,
     tests: Slab<String>,
     groups: Slab<String>,
+    test_order: Vec<TestId>,
     group_ranges: HashMap<GroupId, VecDeque<Range>>,
     requests: HashMap<RequestId, usize>,
 }
@@ -42,6 +43,7 @@ where
             tests: Slab::new(),
             groups: Slab::new(),
             group_ranges: HashMap::new(),
+            test_order: vec![],
             requests: HashMap::new(),
         }
     }
@@ -71,10 +73,10 @@ where
             }
             Msg::RemoveTest(idx) => {
                 context.as_mut().log(&format!("removed test \"{}\" from tests", &self.tests[idx]));
-                self.tests.remove(idx);
+                self.remove_test(idx);
             }
             Msg::AddTest => {
-                self.tests.insert(String::new());
+                self.add_test();
                 context.as_mut().log("added test");
             }
             Msg::EditAmount(amount_id, amount_string) => {
@@ -109,7 +111,7 @@ where
                     <div class="indent",>
                         <table>
                             <tr><td></td><td>{"Test Name"}</td>{ self.view_group_headers() }</tr>
-                            { for self.tests.iter().map(|(i,name)| self.view_test(i, name)) }
+                            { for self.test_order.iter().map(|request_id| self.view_test(*request_id)) }
                             <tr><td><button class="button", onclick=|_| Msg::AddTest,>{ "[+]" }</button></td></tr>
                         </table>
                     </div>
@@ -121,6 +123,16 @@ where
 }
 
 impl Model {
+    fn add_test(&mut self) {
+        let test_id = self.tests.insert(String::new());
+        self.test_order.push(test_id);
+    }
+
+    fn remove_test(&mut self, test_id: TestId) {
+        self.tests.remove(test_id);
+        self.test_order.retain(|x| *x != test_id);
+    }
+
     fn view_group_headers<CTX>(&self) -> Html<CTX, Model>
     where
         CTX: AsMut<ConsoleService> + 'static
@@ -130,10 +142,11 @@ impl Model {
         }
     }
 
-    fn view_test<CTX>(&self, test_id: usize, name: &str) -> Html<CTX, Model>
+    fn view_test<CTX>(&self, test_id: usize) -> Html<CTX, Model>
     where
         CTX: AsMut<ConsoleService> + 'static
     {
+        let name = &self.tests[test_id];
         html! {
             <tr>
                 <td><button class="button", onclick=move |_| Msg::RemoveTest(test_id),>{ "[-]" }</button></td>
