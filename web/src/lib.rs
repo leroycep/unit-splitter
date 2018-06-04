@@ -15,6 +15,8 @@ use core::split::{RequestId, GroupId, TestId};
 
 pub struct Model {
     unit_string: String,
+    // Todo: Make this hold the actual error associated with the parsing
+    unit_string_is_valid: bool,
     tests: Slab<String>,
     groups: Vec<String>,
     test_order: Vec<TestId>,
@@ -40,6 +42,7 @@ where
     fn create(_: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
         Model {
             unit_string: "".into(),
+            unit_string_is_valid: false,
             tests: Slab::new(),
             groups: Vec::new(),
             group_ranges: HashMap::new(),
@@ -64,8 +67,11 @@ where
                             self.groups.push(group.name().to_string());
                             self.group_ranges.insert(group_id, group.ranges().to_vec().into());
                         }
+                        self.unit_string_is_valid = true;
                     }
-                    Err(_) => { }
+                    Err(_) => {
+                        self.unit_string_is_valid = false;
+                    }
                 }
             }
             Msg::EditTestName(idx, value) => {
@@ -100,7 +106,7 @@ where
             <div class="body",>
                 <div>
                     <h1>{ "Units" }</h1>
-                    <input class="indent",
+                    <input class=("indent", if self.unit_string_is_valid { "valid" } else { "invalid" }),
                         type="text",
                         value=&self.unit_string,
                         oninput=|e: InputData| Msg::GotUnits(e.value),
