@@ -36,7 +36,7 @@ range -> Range
     / num:number { Range::new(num, num) }
 
 number -> usize
-    = n:$(digit+) !(alpha / equals) { n.parse().unwrap() }
+    = n:$(digit+) !(alpha / equals) { n.parse().expect("regex should only allow valid numbers to be parsed") }
 
 alpha = [a-zA-Z]
 digit = [0-9]

@@ -190,15 +190,24 @@ impl Model {
     {
         use core::split::split;
         let groups: Vec<_> = (0 .. self.groups.len()).collect();
-        let (used_ranges, unused_ranges) = split(&self.group_ranges, &self.requests, &self.test_order[..], &groups[..]).unwrap();
-        html! {
-            <div>
-                <h1>{ "Output" }</h1>
-                <div class="indent",>
-                    { for used_ranges.iter().map(|(test_id, ranges)| self.view_test_ranges(&self.tests[*test_id], ranges)) }
-                    { self.view_test_ranges("Unused ranges", &unused_ranges) }
+        match split(&self.group_ranges, &self.requests, &self.test_order[..], &groups[..]) {
+            Ok((used_ranges, unused_ranges)) => html! {
+                <div>
+                    <h1>{ "Output" }</h1>
+                    <div class="indent",>
+                        { for used_ranges.iter().map(|(test_id, ranges)| self.view_test_ranges(&self.tests[*test_id], ranges)) }
+                        { self.view_test_ranges("Unused ranges", &unused_ranges) }
+                    </div>
                 </div>
-            </div>
+            },
+            Err(()) => html! {
+                <div>
+                    <h1>{ "Output" }</h1>
+                    <div class="indent",>
+                        { "Unable to split units into requests. Do you have enough units?" }
+                    </div>
+                </div>
+            },
         }
     }
 

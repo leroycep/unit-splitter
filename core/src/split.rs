@@ -31,7 +31,7 @@ pub fn split(ranges: &Ranges, requests: &HashMap<RequestId, usize>, test_order: 
                 if range.is_none() {
                     return Err(());
                 }
-                let range = range.unwrap();
+                let range = range.expect("if returns error before this line can be reached");
                 let (used, unused, amount_left) = range.split(amount);
                 amount = amount_left;
                 used_ranges.push_back(used);
