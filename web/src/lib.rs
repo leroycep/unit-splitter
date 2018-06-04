@@ -136,6 +136,9 @@ impl Model {
     }
 
     fn remove_test(&mut self, test_id: TestId) {
+        for group_id in 0..self.groups.len() {
+            self.requests.remove(&RequestId { test_id, group_id });
+        }
         self.tests.remove(test_id);
         self.test_order.retain(|x| *x != test_id);
     }
