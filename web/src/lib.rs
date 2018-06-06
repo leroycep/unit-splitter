@@ -106,12 +106,11 @@ where
             <div class="body",>
                 <div>
                     <h1>{ "Units" }</h1>
-                    <input class=("indent", if self.unit_string_is_valid { "valid" } else { "invalid" }),
-                        type="text",
+                    <textarea class=("indent", "unit-string-input", if self.unit_string_is_valid { "valid" } else { "invalid" }),
                         value=&self.unit_string,
                         oninput=|e: InputData| Msg::GotUnits(e.value),
                         placeholder="enter unit string",>
-                    </input>
+                    </textarea>
                 </div>
                 <div>
                     <h1>{ "Requests" }</h1>
