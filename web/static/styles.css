@@ -27,3 +27,7 @@ body {
 .unit-string-input {
     width: 100%;
 }
+
+.footer {
+    text-align: center;
+}
