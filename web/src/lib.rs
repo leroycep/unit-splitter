@@ -1,3 +1,6 @@
+
+#![recursion_limit="1024"]
+
 extern crate stdweb;
 #[macro_use]
 extern crate yew;
@@ -12,6 +15,14 @@ use slab::Slab;
 use core::parse::parse_units;
 use core::range::Range;
 use core::split::{RequestId, GroupId, TestId};
+
+const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
+const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
+const AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
+
+fn get_version() -> &'static str {
+    VERSION.unwrap_or("unknown")
+}
 
 pub struct Model {
     unit_string: String,
@@ -123,6 +134,11 @@ where
                     </div>
                 </div>
                 { self.view_output() }
+            </div>
+            <hr/>
+            <div class="footer",>
+                { PKG_NAME }{" "}<a href="changelog.html",>{"v"}{ get_version() }</a>
+                {" by "}{ AUTHORS }
             </div>
         }
     }
