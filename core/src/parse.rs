@@ -1,5 +1,27 @@
 include!(concat!(env!("OUT_DIR"), "/notation.rs"));
 
+use ::interval_tree::IntervalTreeNode;
+use std::collections::HashSet;
+
+pub fn find_overlaps(ranges: &[Range]) -> HashSet<(Range, Range)> {
+    assert!(ranges.len() > 0);
+    let mut tree = IntervalTreeNode::new(ranges[0].clone());
+    // Stores the overlaps that will be returned fromthis function
+    let mut overlaps_total = HashSet::new();
+    // Stores the overlaps temporarily for each range
+    let mut overlaps = vec![];
+    for range in ranges.iter().skip(1) {
+        overlaps.clear();
+        tree.overlap_search(range, &mut overlaps);
+        for conflict in overlaps.iter() {
+            overlaps_total.insert((range.clone(), conflict.clone()));
+        }
+        tree.insert(range.clone());
+    }
+
+    overlaps_total
+}
+
 #[cfg(test)]
 mod tests {
     use range::Range;
@@ -54,5 +76,44 @@ mod tests {
             Group::new("998".into(), vec![Range::new(51, 100)]),
         ];
         assert_eq!(::parse::parse_units("995=1-50, 998=51-100"), Ok(expected));
+    }
+
+    #[test]
+    fn overlapping_ranges_are_detected() {
+        let ranges = vec![Range::new(1, 50), Range::new(51, 100), Range::new(50,50)];
+        assert_eq!(::parse::find_overlaps(&ranges).len(), 1);
+    }
+
+    #[test]
+    fn geeksforgeeks_example() {
+        use std::collections::HashSet;
+        let ranges = vec![ Range::new(1, 5), Range::new(3, 7), Range::new(2, 6), Range::new(10, 15), Range::new(5, 6), Range::new(4, 100) ];
+
+        let mut conflicts = HashSet::new();
+        conflicts.insert((Range::new(3, 7), Range::new(1, 5)));
+        conflicts.insert((Range::new(2, 6), Range::new(1, 5)));
+        conflicts.insert((Range::new(2, 6), Range::new(3, 7)));
+        conflicts.insert((Range::new(5, 6), Range::new(1, 5)));
+        conflicts.insert((Range::new(5, 6), Range::new(3, 7)));
+        conflicts.insert((Range::new(5, 6), Range::new(2, 6)));
+        conflicts.insert((Range::new(4, 100), Range::new(1, 5)));
+        conflicts.insert((Range::new(4, 100), Range::new(3, 7)));
+        conflicts.insert((Range::new(4, 100), Range::new(2, 6)));
+        conflicts.insert((Range::new(4, 100), Range::new(10, 15)));
+        conflicts.insert((Range::new(4, 100), Range::new(5, 6)));
+
+        let overlaps = ::parse::find_overlaps(&ranges);
+
+        println!("Expected Conflicts:");
+        for c in conflicts.iter() {
+            println!("\t[{},{}] should conflict with [{},{}]", c.0.first(), c.0.last(), c.1.first(), c.1.last());
+        }
+
+        println!("\nConflicts:");
+        for c in overlaps.iter() {
+            println!("\t[{},{}] conflicts with [{},{}]", c.0.first(), c.0.last(), c.1.first(), c.1.last());
+        }
+
+        assert_eq!(overlaps, conflicts);
     }
 }

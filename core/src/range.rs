@@ -1,5 +1,5 @@
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Hash, Eq, PartialEq, Clone, Debug)]
 pub struct Range {
     first: usize,
     last: usize,
@@ -40,6 +40,10 @@ impl Range {
             let this_last = other_first - 1;
             (Range::new(self.first, this_last), Some(Range::new(other_first, self.last)), 0)
         }
+    }
+
+    pub fn overlaps(&self, other: &Self) -> bool {
+        !(self.last < other.first || self.first > other.last)
     }
 }
 
