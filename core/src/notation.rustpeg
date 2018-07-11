@@ -8,7 +8,12 @@ use group::Group;
 use range::Range;
 
 pub parse_units -> Vec<Group>
-    = groups:groups { groups }
+    = ranges:ranges comma? _? g:groups {
+        let mut groups = g;
+        groups.insert(0, Group::new("".to_string(), ranges));
+        groups
+    }
+    / groups:groups { groups }
     / ranges:ranges { vec![ Group::new("".to_string(), ranges) ] }
 
 groups -> Vec<Group>

@@ -40,6 +40,16 @@ mod tests {
     }
 
     #[test]
+    fn first_group_is_unnamed() {
+        let expected = vec![
+            Group::new("".into(), vec![Range::new(1, 50)]),
+            Group::new("B".into(), vec![Range::new(51, 100)]),
+            Group::new("C".into(), vec![Range::new(101, 150)]),
+        ];
+        assert_eq!(::parse::parse_units("1-50, B=51-100, C=101-150"), Ok(expected));
+    }
+
+    #[test]
     fn multiple_groups() {
         let expected = vec![
             Group::new("A".into(), vec![Range::new(1, 50)]),
