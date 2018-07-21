@@ -14,8 +14,10 @@ use gtk::{Inhibit, WidgetExt, ButtonExt};
 use gtk::Orientation::{Vertical,Horizontal};
 
 mod procedure;
+mod output;
 
 use procedure::Procedure;
+use output::Output as OutputWidget;
 
 pub struct Model {
     counter: i32,
@@ -41,6 +43,10 @@ impl Win {
 
 #[widget]
 impl Widget for Win {
+    fn init_view(&mut self) {
+        self.output.emit(::output::Msg::UpdateOutput(vec![ ("ESD CDM".into(), "A=1-32, B=36-67".into()) ]));
+    }
+
     fn model() -> Model {
         Model {
             counter: 0,
@@ -106,17 +112,8 @@ impl Widget for Win {
                 },
                 gtk::Frame {
                     label: "Output",
-                    gtk::ListBox {
-                        gtk::Box {
-                            orientation: Horizontal,
-                            spacing: 10,
-                            gtk::Label {
-                                label: "ESD CDM",
-                            },
-                            gtk::Label {
-                                label: "A=1-32,B=36-45",
-                            },
-                        },
+                    #[name="output"]
+                    OutputWidget {
                     }
                 },
             },
@@ -125,7 +122,7 @@ impl Widget for Win {
         }
     }
 }
+
 fn main() {
     Win::run(()).unwrap();
 }
-
