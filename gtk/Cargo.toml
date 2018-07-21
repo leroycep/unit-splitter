@@ -5,6 +5,10 @@ authors = ["LeRoyce Pearson <leroycepearson@geemili.xyz>"]
 
 [dependencies]
 unit-splitter-core = { path = "../core" }
-gtk = "^0.3.0"
-relm = "^0.11.0"
-relm-derive = "^0.11.0"
+relm = "0.14"
+relm-derive = "0.14"
+relm-attributes = "0.14"
+
+[dependencies.gtk]
+version = "0.4"
+features = ["v3_22"]

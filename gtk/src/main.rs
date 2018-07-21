@@ -1,77 +1,61 @@
+#![feature(use_extern_macros)]
+
 extern crate gtk;
 #[macro_use]
 extern crate relm;
 #[macro_use]
 extern crate relm_derive;
+extern crate relm_attributes;
 
-use relm::{Relm, Widget, Update};
+use relm::{Widget, Component, ContainerWidget};
+use relm_attributes::widget;
 use gtk::prelude::*;
-use gtk::{
-    Inhibit, Window, WidgetExt, WindowType, Button, ContainerExt, ButtonExt, Entry, EntryExt, EditableSignals,
-    TreeViewExt, StaticType, ListStoreExtManual,
-    TreeView, CellRendererText, TreeViewColumn, CellLayoutExt,
-};
-use gtk::Orientation::Vertical;
+use gtk::{Inhibit, WidgetExt, ButtonExt};
+use gtk::Orientation::{Vertical,Horizontal};
 
-struct Model {
+mod procedure;
+
+use procedure::Procedure;
+
+pub struct Model {
     counter: i32,
+    procedures: Vec<Component<Procedure>>,
+    procedure_next_id: usize,
 }
 
 #[derive(Msg)]
-enum Msg {
-    Increment,
+pub enum Msg {
+    AddProcedure,
     Decrement,
     Change(String),
     Quit,
 }
 
-#[derive(Clone)]
-struct Widgets {
-    counter_label: Entry,
-    minus_button: Button,
-    plus_button: Button,
-    window: Window,
-}
-
-struct Win {
-    model: Model,
-    widgets: Widgets,
-}
-
 impl Win {
-    fn update_label(&mut self) {
-        let label = &self.widgets.counter_label;
-        label.set_text(&self.model.counter.to_string());
+    fn add_procedure(&mut self) {
+        let widget = self.procedure_view.add_widget::<Procedure>(self.model.procedure_next_id);
+        self.model.procedure_next_id += 1;
+        self.model.procedures.push(widget);
     }
 }
 
-impl Update for Win {
-    // Specify the model used for this widget.
-    type Model = Model;
-    // Specify the model parameter used to init the model.
-    type ModelParam = ();
-    // Specify the type of the messages sent to the update function.
-    type Msg = Msg;
-
-    // Return the initial model.
-    fn model(_: &Relm<Self>, _: ()) -> Model {
+#[widget]
+impl Widget for Win {
+    fn model() -> Model {
         Model {
             counter: 0,
+            procedures: vec![],
+            procedure_next_id: 0,
         }
     }
 
-    // The model may be updated when a message is received.
-    // Widgets may also be updated in this function.
-    // Futures and streams can be connected to send a message when a value is ready.
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::Increment => {
-                self.model.counter += 1;
-                self.update_label();
+            Msg::AddProcedure => {
+                self.add_procedure();
             },
             Msg::Decrement => {
                 self.model.counter -= 1;
-                self.update_label();
             },
             Msg::Change(text) => {
                 match text.parse::<i32>() {
@@ -84,86 +68,64 @@ impl Update for Win {
             Msg::Quit => gtk::main_quit(),
         }
     }
-}
 
-impl Widget for Win {
-    // Specify the type of the root widget.
-    type Root = Window;
+    view! {
+        gtk::Window {
+            title: "Unit Splitter",
+            gtk::Box {
+                orientation: Vertical,
+                gtk::Box {
+                    orientation: Horizontal,
+                    gtk::Frame {
+                        label: "Units",
+                        gtk::TextView {
+                        },
+                    },
+                    gtk::Frame {
+                        label: "Procedures",
+                        gtk::Box {
+                            orientation: Vertical,
+                            #[name="procedure_view"]
+                            gtk::ListBox {
+                                child: {
+                                    fill: true,
+                                    expand: true,
+                                },
+                            },
+                            gtk::Button {
+                                label: "Add Procedure",
+                                clicked(_) => Msg::AddProcedure,
+                            }
+                        }
+                    },
+                },
+                gtk::Frame {
+                    label: "Requests",
+                    gtk::ListBox {
+                    }
+                },
+                gtk::Frame {
+                    label: "Output",
+                    gtk::ListBox {
+                        gtk::Box {
+                            orientation: Horizontal,
+                            spacing: 10,
+                            gtk::Label {
+                                label: "ESD CDM",
+                            },
+                            gtk::Label {
+                                label: "A=1-32,B=36-45",
+                            },
+                        },
+                    }
+                },
+            },
 
-    // Return the root widget.
-    fn root(&self) -> Self::Root {
-        self.widgets.window.clone()
-    }
-
-    // Create the widgets.
-    fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
-        let vbox = gtk::Box::new(Vertical, 0);
-
-        let unit_string_frame = ::gtk::Frame::new("Unit String");
-        let label = ::gtk::Label::new("Hello, world!");
-        unit_string_frame.add(&label);
-        vbox.add(&unit_string_frame);
-
-
-        let unit_requests_frame = ::gtk::Frame::new("Unit Requests");
-        let requests_store = ::gtk::ListStore::new(&[String::static_type(), String::static_type(), u32::static_type()]);
-        requests_store.insert_with_values(None, &[0, 1, 2], &[&"ESD CDM", &"A", &19]);
-        let requests_view = ::gtk::TreeView::new();
-        append_column(&requests_view, 0);
-        append_column(&requests_view, 1);
-        append_column(&requests_view, 2);
-        requests_view.set_model(Some(&requests_store));
-        unit_requests_frame.add(&requests_view);
-        vbox.add(&unit_requests_frame);
-
-        let output_frame = ::gtk::Frame::new("Output");
-        let label = ::gtk::Label::new("ESD CDM | A=1-19");
-        output_frame.add(&label);
-        vbox.add(&output_frame);
-
-        let plus_button = Button::new_with_label("+");
-        vbox.add(&plus_button);
-
-        let counter_label = Entry::new();
-        counter_label.set_text("0");
-        vbox.add(&counter_label);
-
-        let minus_button = Button::new_with_label("-");
-        vbox.add(&minus_button);
-        // GTK+ widgets are used normally within a `Widget`.
-        let window = Window::new(WindowType::Toplevel);
-        window.set_title("Unit Splitter");
-
-        window.add(&vbox);
-
-        // Connect the signal `delete_event` to send the `Quit` message.
-        connect!(relm, plus_button, connect_clicked(_), Msg::Increment);
-        connect!(relm, minus_button, connect_clicked(_), Msg::Decrement);
-        connect!(relm, counter_label, connect_changed(entry), Msg::Change(entry.get_text().unwrap()));
-        connect!(relm, window, connect_delete_event(_, _), return (Some(Msg::Quit), Inhibit(false)));
-        // There is also a `connect!()` macro for GTK+ events that do not need a
-        // value to be returned in the callback.
-
-        window.show_all();
-
-        Win {
-            model,
-            widgets: Widgets { counter_label, plus_button, minus_button, window },
+            delete_event(_, _) => (Msg::Quit, Inhibit(false)),
         }
     }
 }
-
 fn main() {
     Win::run(()).unwrap();
-}
-
-fn append_column(tree: &TreeView, id: i32) {
-    let column = TreeViewColumn::new();
-    let cell = CellRendererText::new();
-
-    column.pack_start(&cell, true);
-    // Association of the view's column with the model's `id` column.
-    column.add_attribute(&cell, "text", id);
-    tree.append_column(&column);
 }
 
