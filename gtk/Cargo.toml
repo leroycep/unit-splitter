@@ -12,3 +12,6 @@ relm-attributes = "0.14"
 [dependencies.gtk]
 version = "0.4"
 features = ["v3_22"]
+
+[features]
+default = ["relm/unstable", "relm-attributes/unstable", "relm-derive/unstable"]
