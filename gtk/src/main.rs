@@ -69,11 +69,19 @@ impl Widget for Win {
                     orientation: Horizontal,
                     gtk::Frame {
                         label: "Units",
+                        child: {
+                            fill: true,
+                            expand: true,
+                        },
                         gtk::TextView {
                         },
                     },
                     gtk::Frame {
                         label: "Procedures",
+                        child: {
+                            fill: true,
+                            expand: true,
+                        },
                         gtk::Box {
                             orientation: Vertical,
                             #[name="procedure_view"]
