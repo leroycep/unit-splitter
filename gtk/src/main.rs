@@ -20,7 +20,6 @@ use procedure::Procedure;
 use output::Output as OutputWidget;
 
 pub struct Model {
-    counter: i32,
     procedures: Vec<Component<Procedure>>,
     procedure_next_id: usize,
 }
@@ -28,8 +27,6 @@ pub struct Model {
 #[derive(Msg)]
 pub enum Msg {
     AddProcedure,
-    Decrement,
-    Change(String),
     Quit,
 }
 
@@ -49,7 +46,6 @@ impl Widget for Win {
 
     fn model() -> Model {
         Model {
-            counter: 0,
             procedures: vec![],
             procedure_next_id: 0,
         }
@@ -59,17 +55,6 @@ impl Widget for Win {
         match event {
             Msg::AddProcedure => {
                 self.add_procedure();
-            },
-            Msg::Decrement => {
-                self.model.counter -= 1;
-            },
-            Msg::Change(text) => {
-                match text.parse::<i32>() {
-                    Ok(num) => {
-                        self.model.counter = num;
-                    }
-                    Err(_) => {}
-                }
             },
             Msg::Quit => gtk::main_quit(),
         }
