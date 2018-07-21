@@ -5,7 +5,12 @@ extern crate relm;
 extern crate relm_derive;
 
 use relm::{Relm, Widget, Update};
-use gtk::{Inhibit, Window, WidgetExt, WindowType, Button, Label, ContainerExt, LabelExt, ButtonExt, Entry, EntryExt, EditableSignals};
+use gtk::prelude::*;
+use gtk::{
+    Inhibit, Window, WidgetExt, WindowType, Button, ContainerExt, ButtonExt, Entry, EntryExt, EditableSignals,
+    TreeViewExt, StaticType, ListStoreExtManual,
+    TreeView, CellRendererText, TreeViewColumn, CellLayoutExt,
+};
 use gtk::Orientation::Vertical;
 
 struct Model {
@@ -99,7 +104,6 @@ impl Widget for Win {
         unit_string_frame.add(&label);
         vbox.add(&unit_string_frame);
 
-        use gtk::{Type, TreeViewExt, StaticType, ListStoreExtManual};
 
         let unit_requests_frame = ::gtk::Frame::new("Unit Requests");
         let requests_store = ::gtk::ListStore::new(&[String::static_type(), String::static_type(), u32::static_type()]);
@@ -128,6 +132,7 @@ impl Widget for Win {
         vbox.add(&minus_button);
         // GTK+ widgets are used normally within a `Widget`.
         let window = Window::new(WindowType::Toplevel);
+        window.set_title("Unit Splitter");
 
         window.add(&vbox);
 
@@ -152,7 +157,6 @@ fn main() {
     Win::run(()).unwrap();
 }
 
-use gtk::{TreeView, CellRendererText, TreeViewColumn, CellLayoutExt, TreeViewExt};
 fn append_column(tree: &TreeView, id: i32) {
     let column = TreeViewColumn::new();
     let cell = CellRendererText::new();
