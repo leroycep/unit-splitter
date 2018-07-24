@@ -63,6 +63,8 @@ impl Widget for Win {
     view! {
         gtk::Window {
             title: "Unit Splitter",
+            property_default_width: 800,
+            property_default_height: 640,
             gtk::Box {
                 orientation: Vertical,
                 gtk::Box {
