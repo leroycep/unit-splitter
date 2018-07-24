@@ -2,15 +2,13 @@
 with pkgs;
 
 let
-  myrustchannel = (rustChannelOf { date = "2018-05-23"; channel = "nightly"; });
+  myrustchannel = (rustChannelOf { date = "2018-07-24"; channel = "nightly"; });
 in
 let
   myrust = (myrustchannel.rust.override {
     extensions = [ "rust-std" ];
     targets = [
         "wasm32-unknown-unknown"
-        "wasm32-unknown-emscripten"
-        "asmjs-unknown-emscripten"
     ];
   });
 in
@@ -21,6 +19,9 @@ in
       myrust
       pkgconfig
       openssl
-      python2
+      glib
+      cairo
+      pango
+      gtk3
     ];
   }
