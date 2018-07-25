@@ -7,50 +7,22 @@ pub enum Msg {
     UpdateOutput(Vec<(String, String)>),
 }
 
-pub struct Model {
-    store: ::gtk::ListStore,
-}
-
 impl Output {
     fn update_output(&mut self, output: &[(String, String)]) {
-        self.model.store.clear();
-        println!("Output");
-        for (procedure_name, units) in output {
-            println!("\t{} | {}", procedure_name, units);
-            let row = self.model.store.append();
-            self.model.store.set_value(&row, 0, &procedure_name.to_value());
-            self.model.store.set_value(&row, 1, &units.to_value());
+        let mut text = String::new();
+        for (procedure_name, units) in output.into_iter() {
+            use std::fmt::Write;
+            write!(text, "\n{}: <span size='20000'>{}</span>", procedure_name, units);
         }
+        self.label.set_markup(text.as_str());
     }
 }
 
+/// This widget shows the generated output. May be extended to something more than a label
+/// in the future.
 #[widget]
 impl ::relm::Widget for Output {
-    fn init_view(&mut self) {
-        self.tree_view.set_model(Some(&self.model.store));
-
-        let column = ::gtk::TreeViewColumn::new();
-        column.set_title("Procedure");
-        self.tree_view.append_column(&column);
-
-        let cell = ::gtk::CellRendererText::new();
-        column.pack_start(&cell, true);
-        column.add_attribute(&cell, "text", 0);
-
-
-        let column = ::gtk::TreeViewColumn::new();
-        column.set_title("Units");
-        self.tree_view.append_column(&column);
-
-        let cell = ::gtk::CellRendererText::new();
-        column.pack_start(&cell, true);
-        column.add_attribute(&cell, "text", 1);
-    }
-
-    fn model() -> Model {
-        Model {
-            store: ::gtk::ListStore::new(&[String::static_type(), String::static_type()]),
-        }
+    fn model() -> () {
     }
 
     fn update(&mut self, event: Msg) {
@@ -62,8 +34,9 @@ impl ::relm::Widget for Output {
     }
 
     view! {
-        #[name="tree_view"]
-        gtk::TreeView {
+        #[name="label"]
+        gtk::Label {
+            selectable: true
         }
     }
 }

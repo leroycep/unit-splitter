@@ -41,7 +41,12 @@ impl Win {
 #[widget]
 impl Widget for Win {
     fn init_view(&mut self) {
-        self.output.emit(::output::Msg::UpdateOutput(vec![ ("ESD CDM".into(), "A=1-32, B=36-67".into()) ]));
+        let test_output = vec![
+            ("ESD CDM".into(), "A=1-32, B=36-67".into()),
+            ("HAST".into(), "A=1-32, B=36-67".into()),
+            ("Precision Drop".into(), "A=1-32, B=36-67".into()),
+        ];
+        self.output.emit(::output::Msg::UpdateOutput(test_output));
     }
 
     fn model() -> Model {
