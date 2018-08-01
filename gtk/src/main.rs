@@ -6,30 +6,36 @@ extern crate relm;
 #[macro_use]
 extern crate relm_derive;
 extern crate relm_attributes;
+extern crate unit_splitter_core as core;
 
 use relm::{Widget, Component, ContainerWidget};
 use relm_attributes::widget;
 use gtk::prelude::*;
 use gtk::{Inhibit, WidgetExt, ButtonExt};
 use gtk::Orientation::{Vertical,Horizontal};
+use core::group::Group;
 
+mod widgets;
 mod procedure;
 mod output;
 
+use widgets::units::Units;
+use widgets::units::Msg::UpdateUnits as UpdateUnitsEvent;
 use procedure::Procedure;
 use output::Output as OutputWidget;
 
 pub struct Model {
-//    units_string: String,
     pub relm: ::relm::Relm<Win>,
+    units: Vec<Group>,
     procedures: Vec<(usize, String)>,
-    procedure_widgets: Vec<Component<Procedure>>,
     procedure_next_id: usize,
+    procedure_widgets: Vec<Component<Procedure>>,
 //    requests: Vec<(GroupId, ProcedureId)>,
 }
 
 #[derive(Msg)]
 pub enum Msg {
+    UnitsUpdated(Vec<Group>),
     AddProcedure,
     ProcedureNameChanged(usize, String),
     RemoveProcedure(usize),
@@ -57,6 +63,11 @@ impl Win {
             }
         }
         // TODO: check if there was no procedure with that id?
+    }
+
+    fn units_updated(&mut self, units: Vec<Group>) {
+        self.model.units = units;
+        println!("Main widget units updated: {:?}", self.model.units);
     }
 
     fn update_procedures(&mut self) {
@@ -103,6 +114,7 @@ impl Widget for Win {
     fn model(relm: &::relm::Relm<Self>, _: ()) -> Model {
         Model {
             relm: relm.clone(),
+            units: vec![],
             procedures: vec![],
             procedure_widgets: vec![],
             procedure_next_id: 0,
@@ -111,6 +123,7 @@ impl Widget for Win {
 
     fn update(&mut self, event: Msg) {
         match event {
+            Msg::UnitsUpdated(units) => self.units_updated(units),
             Msg::AddProcedure => {
                 self.add_procedure();
             },
@@ -135,7 +148,8 @@ impl Widget for Win {
                             fill: true,
                             expand: true,
                         },
-                        gtk::TextView {
+                        Units {
+                            UpdateUnitsEvent(ref units) => Msg::UnitsUpdated(units.clone()),
                         },
                     },
                     gtk::Frame {
