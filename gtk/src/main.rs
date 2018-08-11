@@ -53,11 +53,13 @@ impl Win {
         self.model.procedure_next_id += 1;
         self.model.procedures.push((id, String::new()));
         self.update_procedures();
+        self.update_requests();
     }
 
     fn remove_procedure(&mut self, id: usize) {
         self.model.procedures.retain(|procedure| procedure.0 != id);
         self.update_procedures();
+        self.update_requests();
     }
 
     fn rename_procedure(&mut self, id: usize, name: String) {
@@ -67,16 +69,18 @@ impl Win {
                 break;
             }
         }
+        self.update_requests();
         // TODO: check if there was no procedure with that id?
     }
 
     fn units_updated(&mut self, units: Vec<Group>) {
         self.model.units = units;
+        self.update_requests();
         println!("Main widget units updated: {:?}", self.model.units);
     }
 
     fn update_procedures(&mut self) {
-        self.clear();
+        self.clear_procedure_view();
         for procedure in self.model.procedures.iter() {
             let id = procedure.0;
             let widget = self.procedure_view.add_widget::<Procedure>(procedure.clone());
@@ -96,7 +100,26 @@ impl Win {
         }
     }
 
-    fn clear(&mut self) {
+    fn update_requests(&mut self) {
+        self.clear_requests_view();
+        for group in self.model.units.iter() {
+            for procedure in self.model.procedures.iter() {
+                let widget = self.requests_view.add_widget::<Request>((group.name().to_string(), procedure.1.clone(), 0));
+
+                self.model.request_widgets.push(widget);
+            }
+        }
+    }
+
+    fn clear_requests_view(&mut self) {
+        for widget in self.requests_view.get_children().iter() {
+            self.requests_view.remove(widget);
+        }
+        self.requests_view.show_all();
+        self.model.request_widgets = Vec::new();
+    }
+
+    fn clear_procedure_view(&mut self) {
         for widget in self.procedure_view.get_children().iter() {
             self.procedure_view.remove(widget);
         }

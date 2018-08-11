@@ -41,11 +41,22 @@ impl Widget for Request {
     view! {
         gtk::Box {
             orientation: gtk::Orientation::Horizontal,
+            spacing: 10,
 
             #[name="group_name"]
-            gtk::Label {},
+            gtk::Label {
+                child: {
+                    expand: true,
+                    fill: true,
+                },
+            },
             #[name="procedure_name"]
-            gtk::Label {},
+            gtk::Label {
+                child: {
+                    expand: true,
+                    fill: true,
+                },
+            },
             gtk::Entry {
                 input_purpose: gtk::InputPurpose::Digits,
             },
