@@ -21,6 +21,7 @@ mod output;
 
 use widgets::units::Units;
 use widgets::units::Msg::UpdateUnits as UpdateUnitsEvent;
+use widgets::request::Msg::AmountEdited as AmountEditedEvent;
 use widgets::request::Request;
 use procedure::Procedure;
 use output::Output as OutputWidget;
@@ -44,6 +45,7 @@ pub enum Msg {
     AddProcedure,
     ProcedureNameChanged(usize, String),
     RemoveProcedure(usize),
+    RequestAmountEdited(usize, usize, usize),
     Quit,
 }
 
@@ -73,10 +75,24 @@ impl Win {
         // TODO: check if there was no procedure with that id?
     }
 
+    fn set_request_amount(&mut self, group_id: usize, procedure_id: usize, amount: usize) {
+        let mut request_found = false;
+        for request in self.model.requests.iter_mut() {
+            if request.0 == group_id && request.1 == procedure_id {
+                request.2 = amount;
+                request_found = true;
+                break;
+            }
+        }
+        if !request_found {
+            println!("Request not found");
+        }
+        self.update_output();
+    }
+
     fn units_updated(&mut self, units: Vec<Group>) {
         self.model.units = units;
         self.update_requests();
-        println!("Main widget units updated: {:?}", self.model.units);
     }
 
     fn update_procedures(&mut self) {
@@ -102,13 +118,27 @@ impl Win {
 
     fn update_requests(&mut self) {
         self.clear_requests_view();
-        for group in self.model.units.iter() {
+        self.model.requests.clear();
+        for (group_id, group) in self.model.units.iter().enumerate() {
             for procedure in self.model.procedures.iter() {
                 let widget = self.requests_view.add_widget::<Request>((group.name().to_string(), procedure.1.clone(), 0));
 
+                let procedure_id = procedure.0;
+
+                connect!(
+                    widget@AmountEditedEvent(amount),
+                    self.model.relm,
+                    Msg::RequestAmountEdited(group_id, procedure_id, amount)
+                );
+
                 self.model.request_widgets.push(widget);
+                self.model.requests.push((group_id, procedure_id, 0));
             }
         }
+    }
+
+    fn update_output(&mut self) {
+        // TODO:
     }
 
     fn clear_requests_view(&mut self) {
@@ -162,6 +192,7 @@ impl Widget for Win {
             },
             Msg::RemoveProcedure(id) => self.remove_procedure(id),
             Msg::ProcedureNameChanged(id, text) => self.rename_procedure(id, text),
+            Msg::RequestAmountEdited(group_id, procedure_id, amount) => self.set_request_amount(group_id, procedure_id, amount),
             Msg::Quit => gtk::main_quit(),
         }
     }

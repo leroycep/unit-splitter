@@ -13,6 +13,14 @@ pub struct Model {
 
 #[derive(Msg)]
 pub enum Msg {
+    EditAmount(String),
+    AmountEdited(usize),
+}
+
+impl Request {
+    fn emit_update(&mut self) {
+        self.model.relm.stream().emit(Msg::AmountEdited(self.model.amount));
+    }
 }
 
 #[widget]
@@ -33,7 +41,19 @@ impl Widget for Request {
 
     fn update(&mut self, event: Msg) {
         match event {
-            _ => {
+            Msg::EditAmount(text) => {
+                println!("Amount edited: {} {} {}", self.model.group_name, self.model.procedure_name, text);
+                match text.parse::<usize>() {
+                    Ok(amount) => {
+                        println!("Amount number edited: {} {} {}", self.model.group_name, self.model.procedure_name, text);
+                        self.model.amount = amount;
+                        self.emit_update();
+                    },
+                    Err(_) => {}
+                }
+            }
+            Msg::AmountEdited(_) => {
+                println!("Amount edited event emitted");
             }
         }
     }
@@ -59,6 +79,7 @@ impl Widget for Request {
             },
             gtk::Entry {
                 input_purpose: gtk::InputPurpose::Digits,
+                changed(entry) => Msg::EditAmount(entry.get_text().unwrap()),
             },
         },
     }
