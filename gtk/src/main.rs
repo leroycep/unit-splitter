@@ -21,8 +21,12 @@ mod output;
 
 use widgets::units::Units;
 use widgets::units::Msg::UpdateUnits as UpdateUnitsEvent;
+use widgets::request::Request;
 use procedure::Procedure;
 use output::Output as OutputWidget;
+
+type GroupId = usize;
+type ProcedureId = usize;
 
 pub struct Model {
     pub relm: ::relm::Relm<Win>,
@@ -30,7 +34,8 @@ pub struct Model {
     procedures: Vec<(usize, String)>,
     procedure_next_id: usize,
     procedure_widgets: Vec<Component<Procedure>>,
-//    requests: Vec<(GroupId, ProcedureId)>,
+    requests: Vec<(GroupId, ProcedureId, usize)>,
+    request_widgets: Vec<Component<Request>>,
 }
 
 #[derive(Msg)]
@@ -109,6 +114,9 @@ impl Widget for Win {
             ("Precision Drop".into(), "A=1-32, B=36-67".into()),
         ];
         self.output.emit(::output::Msg::UpdateOutput(test_output));
+
+        let widget = self.requests_view.add_widget::<Request>(("Hello".into(), "world".into(), 0));
+        self.model.request_widgets.push(widget);
     }
 
     fn model(relm: &::relm::Relm<Self>, _: ()) -> Model {
@@ -118,6 +126,8 @@ impl Widget for Win {
             procedures: vec![],
             procedure_widgets: vec![],
             procedure_next_id: 0,
+            requests: vec![],
+            request_widgets: vec![],
         }
     }
 
@@ -176,6 +186,7 @@ impl Widget for Win {
                 },
                 gtk::Frame {
                     label: "Requests",
+                    #[name="requests_view"]
                     gtk::ListBox {
                     }
                 },
