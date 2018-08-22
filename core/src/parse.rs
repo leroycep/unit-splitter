@@ -109,10 +109,11 @@ impl Tokenizer {
     }
 }
 
-pub fn tokenize(source: &str, output: &mut Vec<Token>) {
-    let mut tokenizer = Tokenizer::new(source);
-    while let Some(token) = tokenizer.get_next_token() {
-        output.push(token);
+impl Iterator for Tokenizer {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.get_next_token()
     }
 }
 
@@ -280,8 +281,7 @@ mod tests {
             Token::new(21, 1, Hyphen),
             Token::new(22, 3, Number),
         ];
-        let mut tokens = Vec::new();
-        ::parse::tokenize(text, &mut tokens);
+        let tokens: Vec<Token> = ::parse::Tokenizer::new(text).collect();
         assert_eq!(tokens, expected);
     }
 
