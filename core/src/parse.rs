@@ -2,21 +2,92 @@ include!(concat!(env!("OUT_DIR"), "/notation.rs"));
 
 use ::interval_tree::IntervalTreeNode;
 use std::collections::HashSet;
+use std::str::CharIndices;
+use std::iter::Peekable;
 
 
 #[derive(Eq, PartialEq, Debug, Clone)]
-pub struct Token {
+pub struct TokenMeta<'source> {
     start: usize,
-    len: usize,
-    kind: TokenKind,
+    text: &'source str,
 }
 
-impl Token {
-    pub fn new(start: usize, len: usize, kind: TokenKind) -> Self {
+impl<'source> TokenMeta<'source> {
+    pub fn new(source: &'source str, start: usize, len: usize) -> Self {
+        let text = &source[start..start+len];
         Self {
             start,
-            len,
-            kind,
+            text,
+        }
+    }
+}
+
+#[derive(Eq, PartialEq, Debug, Clone)]
+pub struct EqualsToken<'source> {
+    meta: TokenMeta<'source>,
+}
+
+#[derive(Eq, PartialEq, Debug, Clone)]
+pub struct HyphenToken<'source> {
+    meta: TokenMeta<'source>,
+}
+
+#[derive(Eq, PartialEq, Debug, Clone)]
+pub struct NumberToken<'source> {
+    meta: TokenMeta<'source>,
+}
+
+#[derive(Eq, PartialEq, Debug, Clone)]
+pub struct NameToken<'source> {
+    meta: TokenMeta<'source>,
+}
+
+#[derive(Eq, PartialEq, Debug, Clone)]
+pub enum Token<'source> {
+    Equals(EqualsToken<'source>),
+    Hyphen(HyphenToken<'source>),
+    Number(NumberToken<'source>),
+    Name(NameToken<'source>),
+}
+
+impl<'source> Token<'source> {
+    pub fn equals(source: &'source str, start: usize) -> Self {
+        let meta = TokenMeta::new(source, start, 1);
+        Token::Equals(EqualsToken { meta })
+    }
+
+    pub fn hyphen(source: &'source str, start: usize) -> Self {
+        let meta = TokenMeta::new(source, start, 1);
+        Token::Hyphen(HyphenToken { meta })
+    }
+
+    pub fn number(source: &'source str, start: usize, len: usize) -> Self {
+        let meta = TokenMeta::new(source, start, len);
+        Token::Number(NumberToken { meta })
+    }
+
+    pub fn name(source: &'source str, start: usize, len: usize) -> Self {
+        let meta = TokenMeta::new(source, start, len);
+        Token::Name(NameToken { meta })
+    }
+
+    pub fn start_pos(&self) -> usize {
+        use parse::Token::*;
+        match self {
+            Equals(token) => token.meta.start,
+            Hyphen(token) => token.meta.start,
+            Number(token) => token.meta.start,
+            Name(token) => token.meta.start,
+        }
+    }
+
+    pub fn text(&self) -> &'source str {
+        use parse::Token::*;
+        match self {
+            Equals(token) => token.meta.text,
+            Hyphen(token) => token.meta.text,
+            Number(token) => token.meta.text,
+            Name(token) => token.meta.text,
         }
     }
 }
@@ -29,34 +100,40 @@ pub enum TokenKind {
     Identifier,
 }
 
-struct Tokenizer {
-    source: Vec<(usize, char)>,
-    pos: usize,
+struct Tokenizer<'source> {
+    source_str: &'source str,
+    source: Peekable<CharIndices<'source>>,
 }
 
-impl Tokenizer {
-    pub fn new(source: &str) -> Self {
+impl<'source> Tokenizer<'source> {
+    pub fn new(source: &'source str) -> Self {
         Self {
-            source: source.char_indices().collect(),
-            pos: 0,
+            source_str: source,
+            source: source.char_indices().peekable(),
         }
     }
 
-    pub fn get_next_token(&mut self) -> Option<Token> {
+    pub fn get_next_token(&mut self) -> Option<Token<'source>> {
         loop {
             match self.next_char() {
                 None => return None,
-                Some((pos, '=')) => return Some(Token::new(pos, 1, TokenKind::Equals)),
-                Some((pos, '-')) => return Some(Token::new(pos, 1, TokenKind::Hyphen)),
+                Some((pos, '=')) => return Some(Token::equals(self.source_str, pos)),
+                Some((pos, '-')) => return Some(Token::hyphen(self.source_str, pos)),
                 Some((_, c)) if is_whitespace(c) => continue,
                 Some((start_pos, c)) if c.is_digit(10) => {
-                    let mut c;
+                    let mut pos = start_pos;
+                    let mut c = c;
                     let mut is_number = true;
                     loop {
-                        c = match self.peek_char() {
-                            None => break,
-                            Some((_pos, c)) => c
+                        let next_pair = match self.peek_char() {
+                            None => {
+                                pos += 1;
+                                break;
+                            },
+                            Some((pos, c)) => (pos, c),
                         };
+                        pos = next_pair.0;
+                        c = next_pair.1;
                         if c.is_digit(10) { }
                         else if is_whitespace(c) { break }
                         else if is_hyphen(c) { break }
@@ -64,28 +141,34 @@ impl Tokenizer {
                         else { /* TODO: Report error, unexpected character */ }
                         self.next_char(); // Consume character if loop has not broke yet
                     }
-                    let len = self.pos - start_pos;
+                    let len = pos - start_pos;
                     return Some(if is_number {
-                        Token::new(start_pos, len, TokenKind::Number)
+                        Token::number(self.source_str, start_pos, len)
                     } else {
-                        Token::new(start_pos, len, TokenKind::Identifier)
+                        Token::name(self.source_str, start_pos, len)
                     });
                 },
                 Some((start_pos, c)) if is_identifier(c) => {
+                    let mut pos = start_pos;
                     let mut c;
                     loop {
-                        c = match self.peek_char() {
-                            None => break,
-                            Some((_pos, c)) => c
+                        let next_pair = match self.peek_char() {
+                            None => {
+                                pos += 1;
+                                break;
+                            },
+                            Some((pos, c)) => (pos, c),
                         };
+                        pos = next_pair.0;
+                        c = next_pair.1;
                         if is_identifier(c) { }
                         else if is_whitespace(c) { break }
                         else if is_equals(c) { break }
                         else { /* TODO: Report error, unexpected character */ }
                         self.next_char(); // Consume character if loop has not broke yet
                     }
-                    let len = self.pos - start_pos;
-                    return Some(Token::new(start_pos, len, TokenKind::Identifier));
+                    let len = pos - start_pos;
+                    return Some(Token::name(self.source_str, start_pos, len));
                 },
                 Some((_pos, _c)) => {
                     // TODO: Report error, unexpected character
@@ -97,20 +180,16 @@ impl Tokenizer {
     //fn get_number(&mut self)
 
     fn next_char(&mut self) -> Option<(usize, char)> {
-        let result = self.source.get(self.pos).map(|(p, c)| (*p, *c));
-        if result.is_some() {
-            self.pos += 1;
-        }
-        result
+        self.source.next().map(|(p, c)| (p.clone(), c.clone()))
     }
 
-    fn peek_char(&self) -> Option<(usize, char)> {
-        self.source.get(self.pos).map(|(p, c)| (*p, *c))
+    fn peek_char(&mut self) -> Option<(usize, char)> {
+        self.source.peek().map(|(p, c)| (p.clone(), c.clone()))
     }
 }
 
-impl Iterator for Tokenizer {
-    type Item = Token;
+impl<'source> Iterator for Tokenizer<'source> {
+    type Item = Token<'source>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.get_next_token()
@@ -265,23 +344,26 @@ mod tests {
     fn tokenize_first_group_is_unnamed() {
         use ::parse::Token;
         use ::parse::TokenKind::*;
-        let text = "1-50, B=51-100, C=101-150";
+        let source = "1-50, B=51-100, C=101-150";
         let expected = vec![
-            Token::new(0, 1, Number),
-            Token::new(1, 1, Hyphen),
-            Token::new(2, 2, Number),
-            Token::new(6, 1, Identifier),
-            Token::new(7, 1, Equals),
-            Token::new(8, 2, Number),
-            Token::new(10, 1, Hyphen),
-            Token::new(11, 3, Number),
-            Token::new(16, 1, Identifier),
-            Token::new(17, 1, Equals),
-            Token::new(18, 3, Number),
-            Token::new(21, 1, Hyphen),
-            Token::new(22, 3, Number),
+            Token::number(&source, 0, 1),
+            Token::hyphen(&source, 1),
+            Token::number(&source, 2, 2),
+            Token::name(&source, 6, 1),
+            Token::equals(&source, 7),
+            Token::number(&source, 8, 2),
+            Token::hyphen(&source, 10),
+            Token::number(&source, 11, 3),
+            Token::name(&source, 16, 1),
+            Token::equals(&source, 17),
+            Token::number(&source, 18, 3),
+            Token::hyphen(&source, 21),
+            Token::number(&source, 22, 3),
         ];
-        let tokens: Vec<Token> = ::parse::Tokenizer::new(text).collect();
+        for expected_token in expected.iter() {
+            println!("({}, {}): {}", expected_token.start_pos(), expected_token.text().len(), expected_token.text());
+        }
+        let tokens: Vec<Token> = ::parse::Tokenizer::new(&source).collect();
         assert_eq!(tokens, expected);
     }
 
