@@ -4,19 +4,18 @@
 // Accepts input like "A=1-50, B=51-100" and returns it as a list of groups
 // containing ranges of units.
 
-units = { groups | ranges }
+inventory = { SOI ~ group+ ~ EOI }
 
-groups = { group ~ (comma? ~ group)* }
-group = { group_name ~ "=" ~ ranges }
+group = { (name ~ equals)? ~ range+ }
+range = { number ~ hyphen ~ number | number }
 
-alpha = { 'a'..'z' | 'A'..'Z' }
-digit = { '0'..'9' }
+name = @{ ident+ }
+number = @{ !(name ~ equals) ~ digit+ }
+
+ident = @{ !(WHITESPACE | equals) ~ ANY }
+digit = @{ '0'..'9' }
+hyphen = @{ "-" }
+equals = _{ "=" }
 comma = _{ "," }
-group_name = { ("_" | "-" | alpha | digit)+ }
 
-ranges = { range ~ (comma ~ whitespace ~ range)* }
-range = { (number ~ "-" ~ number) | number }
-
-number = { digit+ }
-
-whitespace = _{ ("\t" | "\n" | "\r")+ }
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" | comma }

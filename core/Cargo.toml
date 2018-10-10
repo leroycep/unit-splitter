@@ -2,12 +2,10 @@
 name = "unit-splitter-core"
 version = "0.1.0"
 authors = ["LeRoyce Pearson <leroycepearson@geemili.xyz>"]
-build = "build.rs"
 
 [dependencies]
 failure = "0.1"
 failure_derive = "0.1"
 slab = "0.4"
-
-[build-dependencies]
-peg = { version = "0.5" }
+pest = "*"
+pest_derive = "*"
