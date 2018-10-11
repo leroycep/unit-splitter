@@ -10,6 +10,11 @@ impl Range {
         Self { first, last }
     }
 
+    /// A convience function for a range of size one
+    pub fn num(num: usize) -> Self {
+        Self { first: num, last: num }
+    }
+
     pub fn first(&self) -> usize {
         self.first
     }

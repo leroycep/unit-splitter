@@ -1,11 +1,82 @@
 
+use group::Group;
+use range::Range;
+use pest::Parser;
+
 #[derive(Parser)]
 #[grammar = "inventory.pest"]
 pub struct InventoryParser;
 
+#[derive(Fail, Debug, PartialEq)]
+pub enum InventoryParseError {
+    #[fail(display = "Invalid syntax: {}", _0)]
+    Syntax(::pest::error::Error<Rule>),
+    #[fail(display = "Overlapping unit numbers: {:?}", overlaps)]
+    OverlappingUnits {
+        overlaps: Vec<(::pest::Span<'static>, ::pest::Span<'static>)>,
+    },
+}
+
+impl From<pest::error::Error<Rule>> for InventoryParseError {
+    fn from(error: pest::error::Error<Rule>) -> Self {
+        InventoryParseError::Syntax(error)
+    }
+}
+
+pub fn parse(input: &str) -> Result<Vec<Group>, InventoryParseError> {
+    let mut parse = InventoryParser::parse(Rule::inventory, input)?;
+    let inventory = parse.next().expect("If there is no input, SyntaxError is returned in the above statement");
+    let mut groups = vec![];
+    for group in inventory.into_inner() {
+        match group.as_rule() {
+            Rule::group => {
+                let mut inner = group.into_inner();
+                let first = inner.next().unwrap();
+
+                let mut ranges = vec![];
+
+                let name;
+                if first.as_rule() == Rule::name {
+                    name = String::from(first.as_str());
+                } else {
+                    name = String::new();
+                    ranges.push(parse_ranges_from_rules(first));
+                }
+
+                for range in inner {
+                    ranges.push(parse_ranges_from_rules(range));
+                }
+
+                groups.push(Group::new(name, ranges));
+            }
+            Rule::EOI => {}
+            _ => unreachable!(),
+        }
+    }
+    Ok(groups)
+}
+
+/// Parses a Pair that is of `Rule::range` or `Rule::number` into a Range
+fn parse_ranges_from_rules(pair: pest::iterators::Pair<Rule>) -> Range {
+    match pair.as_rule() {
+        Rule::number => {
+            Range::num(pair.as_str().parse().expect("The number rule should be parseable by rust number parser"))
+        }
+        Rule::range => {
+            let mut inner = pair.into_inner();
+            let first = inner.next().expect("Rule::range must have two numbers").as_str().parse().expect("Number rule should be parseable by rust number parser");
+            let last = inner.next().expect("Rule::range must have two numbers").as_str().parse().expect("Number rule should be parseable by rust number parser");
+            Range::new(first, last)
+        }
+        _ => unreachable!(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use inventory::{InventoryParser, Rule};
+    use inventory::{InventoryParser, Rule, InventoryParseError, parse};
+    use group::Group;
+    use range::Range;
 
     #[test]
     fn one_group() {
@@ -173,5 +244,38 @@ mod tests {
                 ])
             ]
         };
+    }
+
+    #[test]
+    fn parse_units_into_types() {
+        let result = parse("1-10,12");
+        let expected = vec![
+            Group::new("".to_string(), vec![
+                Range::new(1, 10),
+                Range::num(12),
+            ])
+        ];
+
+        assert_eq!(result, Ok(expected));
+    }
+
+    #[test]
+    fn overlapping_ranges() {
+        let result = parse("1-10,5");
+
+        match result {
+            Ok(_) => panic!("Overlapping ranges should throw an error."),
+            Err(InventoryParseError::Syntax(_)) => panic!("Overlapping ranges are not a syntax error."),
+            Err(InventoryParseError::OverlappingUnits { overlaps }) => {
+                assert!(overlaps.len() == 1);
+                let overlap = &overlaps[0];
+
+                assert_eq!(overlap.0.start_pos().pos(), 0);
+                assert_eq!(overlap.0.end_pos().pos(), 4);
+
+                assert_eq!(overlap.1.start_pos().pos(), 5);
+                assert_eq!(overlap.1.end_pos().pos(), 6);
+            }
+        }
     }
 }
