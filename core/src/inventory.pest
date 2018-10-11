@@ -6,15 +6,15 @@
 
 inventory = { SOI ~ group+ ~ EOI }
 
-group = { (name ~ equals)? ~ range+ }
-range = { number ~ hyphen ~ number | number }
+group = { (name ~ equals)? ~ (range | number)+ }
+range = { number ~ hyphen ~ number }
 
 name = @{ ident+ }
 number = @{ !(name ~ equals) ~ digit+ }
 
 ident = @{ !(WHITESPACE | equals) ~ ANY }
 digit = @{ '0'..'9' }
-hyphen = @{ "-" }
+hyphen = _{ "-" }
 equals = _{ "=" }
 comma = _{ "," }
 
