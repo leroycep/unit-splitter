@@ -2,10 +2,52 @@
 use group::Group;
 use range::Range;
 use pest::Parser;
+use ::interval_tree::IntervalTree;
 
 #[derive(Parser)]
 #[grammar = "inventory.pest"]
 pub struct InventoryParser;
+
+/// An owned version of `pest::Span` that can be put into error types easily.
+#[derive(PartialEq, Clone, Debug)]
+pub struct OwnedSpan {
+    /// The start of this text in the original string
+    start: usize,
+    /// The end of this text in the original string
+    end: usize,
+    /// A copy of the text that this Span represents
+    text: String,
+}
+
+impl OwnedSpan {
+    pub fn new(start: usize, end: usize, text: String) -> Self {
+        Self {
+            start, end, text
+        }
+    }
+
+    pub fn start(&self) -> usize {
+        self.start
+    }
+
+    pub fn end(&self) -> usize {
+        self.end
+    }
+
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+}
+
+impl<'i> From<pest::Span<'i>> for OwnedSpan {
+    fn from(span: pest::Span) -> Self {
+        Self {
+            text: span.as_str().into(),
+            start: span.start(),
+            end: span.end(),
+        }
+    }
+}
 
 #[derive(Fail, Debug, PartialEq)]
 pub enum InventoryParseError {
@@ -14,12 +56,12 @@ pub enum InventoryParseError {
 
     #[fail(display = "Overlapping unit numbers: {:?}", overlaps)]
     OverlappingUnits {
-        overlaps: Vec<(::pest::Span<'static>, ::pest::Span<'static>)>,
+        overlaps: Vec<(OwnedSpan, OwnedSpan)>,
     },
 
     #[fail(display = "Duplicate group names: {:?}", duplicates)]
     DuplicateGroups {
-        duplicates: Vec<(::pest::Span<'static>, ::pest::Span<'static>)>,
+        duplicates: Vec<(OwnedSpan, OwnedSpan)>,
     },
 }
 
@@ -33,6 +75,7 @@ pub fn parse(input: &str) -> Result<Vec<Group>, InventoryParseError> {
     let mut parse = InventoryParser::parse(Rule::inventory, input)?;
     let inventory = parse.next().expect("If there is no input, SyntaxError is returned in the above statement");
     let mut groups = vec![];
+    let mut overlapping_ranges = vec![];
     for group in inventory.into_inner() {
         match group.as_rule() {
             Rule::group => {
@@ -40,17 +83,30 @@ pub fn parse(input: &str) -> Result<Vec<Group>, InventoryParseError> {
                 let first = inner.next().unwrap();
 
                 let mut ranges = vec![];
+                let mut interval_tree = IntervalTree::new();
 
                 let name;
                 if first.as_rule() == Rule::name {
                     name = String::from(first.as_str());
                 } else {
                     name = String::new();
-                    ranges.push(parse_ranges_from_rules(first));
+                    let range = parse_ranges_from_rules(first.clone());
+                    interval_tree.insert(range.clone(), first.as_span());
+                    ranges.push(range);
                 }
 
-                for range in inner {
-                    ranges.push(parse_ranges_from_rules(range));
+                for pair in inner {
+                    let range = parse_ranges_from_rules(pair.clone());
+
+                    let mut overlaps = vec![];
+                    interval_tree.overlap_search(&range, &mut overlaps);
+                    for (_overlapping_range, overlapping_span) in overlaps {
+                        overlapping_ranges.push((pair.as_span().into(), overlapping_span.into()));
+                    }
+
+                    interval_tree.insert(range.clone(), pair.as_span());
+
+                    ranges.push(range);
                 }
 
                 groups.push(Group::new(name, ranges));
@@ -59,7 +115,12 @@ pub fn parse(input: &str) -> Result<Vec<Group>, InventoryParseError> {
             _ => unreachable!(),
         }
     }
-    Ok(groups)
+
+    if overlapping_ranges.len() > 0 {
+        Err(InventoryParseError::OverlappingUnits { overlaps: overlapping_ranges })
+    } else {
+        Ok(groups)
+    }
 }
 
 /// Parses a Pair that is of `Rule::range` or `Rule::number` into a Range
@@ -80,7 +141,7 @@ fn parse_ranges_from_rules(pair: pest::iterators::Pair<Rule>) -> Range {
 
 #[cfg(test)]
 mod tests {
-    use inventory::{InventoryParser, Rule, InventoryParseError, parse};
+    use inventory::{InventoryParser, Rule, InventoryParseError, OwnedSpan, parse};
     use group::Group;
     use range::Range;
 
@@ -272,16 +333,13 @@ mod tests {
         match result {
             Ok(_) => panic!("Overlapping ranges should throw an error."),
             Err(InventoryParseError::Syntax(_)) => panic!("Overlapping ranges are not a syntax error."),
-            Err(InventoryParseError::DuplicateGroups { duplicates }) => panic!("Overlapping ranges are not a duplicate groups error."),
+            Err(InventoryParseError::DuplicateGroups { duplicates: _ }) => panic!("Overlapping ranges are not a duplicate groups error."),
             Err(InventoryParseError::OverlappingUnits { overlaps }) => {
                 assert!(overlaps.len() == 1);
                 let overlap = &overlaps[0];
+                let expected = &(OwnedSpan::new(5, 6, "5".into()), OwnedSpan::new(0, 4, "1-10".into()));
 
-                assert_eq!(overlap.0.start_pos().pos(), 0);
-                assert_eq!(overlap.0.end_pos().pos(), 4);
-
-                assert_eq!(overlap.1.start_pos().pos(), 5);
-                assert_eq!(overlap.1.end_pos().pos(), 6);
+                assert_eq!(overlap, expected);
             }
         }
     }
@@ -293,16 +351,16 @@ mod tests {
         match result {
             Ok(_) => panic!("Duplicated groups should throw an error."),
             Err(InventoryParseError::Syntax(_)) => panic!("Duplicated groups are not a syntax error."),
-            Err(InventoryParseError::OverlappingUnits { overlaps }) => panic!("Duplicated groups are not a overlapping units error."),
+            Err(InventoryParseError::OverlappingUnits { overlaps: _ }) => panic!("Duplicated groups are not a overlapping units error."),
             Err(InventoryParseError::DuplicateGroups { duplicates }) => {
                 assert!(duplicates.len() == 1);
                 let duplicate = &duplicates[0];
 
-                assert_eq!(duplicate.0.start_pos().pos(), 0);
-                assert_eq!(duplicate.0.end_pos().pos(), 1);
+                assert_eq!(duplicate.0.start(), 0);
+                assert_eq!(duplicate.0.end(), 1);
 
-                assert_eq!(duplicate.1.start_pos().pos(), 8);
-                assert_eq!(duplicate.1.end_pos().pos(), 9);
+                assert_eq!(duplicate.1.start(), 8);
+                assert_eq!(duplicate.1.end(), 9);
             }
         }
     }
