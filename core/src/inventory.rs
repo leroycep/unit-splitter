@@ -11,9 +11,15 @@ pub struct InventoryParser;
 pub enum InventoryParseError {
     #[fail(display = "Invalid syntax: {}", _0)]
     Syntax(::pest::error::Error<Rule>),
+
     #[fail(display = "Overlapping unit numbers: {:?}", overlaps)]
     OverlappingUnits {
         overlaps: Vec<(::pest::Span<'static>, ::pest::Span<'static>)>,
+    },
+
+    #[fail(display = "Duplicate group names: {:?}", duplicates)]
+    DuplicateGroups {
+        duplicates: Vec<(::pest::Span<'static>, ::pest::Span<'static>)>,
     },
 }
 
@@ -266,6 +272,7 @@ mod tests {
         match result {
             Ok(_) => panic!("Overlapping ranges should throw an error."),
             Err(InventoryParseError::Syntax(_)) => panic!("Overlapping ranges are not a syntax error."),
+            Err(InventoryParseError::DuplicateGroups { duplicates }) => panic!("Overlapping ranges are not a duplicate groups error."),
             Err(InventoryParseError::OverlappingUnits { overlaps }) => {
                 assert!(overlaps.len() == 1);
                 let overlap = &overlaps[0];
@@ -275,6 +282,27 @@ mod tests {
 
                 assert_eq!(overlap.1.start_pos().pos(), 5);
                 assert_eq!(overlap.1.end_pos().pos(), 6);
+            }
+        }
+    }
+
+    #[test]
+    fn duplicate_groups() {
+        let result = parse("A=1-10, A=11-20");
+
+        match result {
+            Ok(_) => panic!("Duplicated groups should throw an error."),
+            Err(InventoryParseError::Syntax(_)) => panic!("Duplicated groups are not a syntax error."),
+            Err(InventoryParseError::OverlappingUnits { overlaps }) => panic!("Duplicated groups are not a overlapping units error."),
+            Err(InventoryParseError::DuplicateGroups { duplicates }) => {
+                assert!(duplicates.len() == 1);
+                let duplicate = &duplicates[0];
+
+                assert_eq!(duplicate.0.start_pos().pos(), 0);
+                assert_eq!(duplicate.0.end_pos().pos(), 1);
+
+                assert_eq!(duplicate.1.start_pos().pos(), 8);
+                assert_eq!(duplicate.1.end_pos().pos(), 9);
             }
         }
     }
