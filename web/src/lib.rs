@@ -47,7 +47,7 @@ impl<CTX> Component<CTX> for Model
 where
     CTX: AsMut<ConsoleService>,
 {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = ();
 
     fn create(_: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
@@ -62,7 +62,7 @@ where
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, context: &mut Env<CTX, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, context: &mut Env<CTX, Self>) -> ShouldRender {
         match msg {
             Msg::GotUnits(value) => {
                 self.unit_string = value;
@@ -119,7 +119,7 @@ where
                     <h1>{ "Units" }</h1>
                     <textarea class=("indent", "unit-string-input", if self.unit_string_is_valid { "valid" } else { "invalid" }),
                         value=&self.unit_string,
-                        oninput=|e: InputData| Msg::GotUnits(e.value),
+                        oninput=|e| Msg::GotUnits(e.value),
                         placeholder="enter unit string",>
                     </textarea>
                 </div>
@@ -174,11 +174,11 @@ impl Model {
         let name = &self.tests[test_id];
         html! {
             <tr>
-                <td><button class="button", onclick=move |_| Msg::RemoveTest(test_id),>{ "[-]" }</button></td>
+                <td><button class="button", onclick=|_| Msg::RemoveTest(test_id),>{ "[-]" }</button></td>
                 <td><input
                     type="text",
                     value=name,
-                    oninput=move |e: InputData| Msg::EditTestName(test_id, e.value),
+                    oninput=|e| Msg::EditTestName(test_id, e.value),
                     placeholder="enter test name",></input></td>
                 { self.view_requests(test_id) }
             </tr>
@@ -203,7 +203,7 @@ impl Model {
             <input
                 type="number",
                 value=amount,
-                oninput=move |e: InputData| Msg::EditAmount(RequestId { test_id, group_id }, e.value),>
+                oninput=|e| Msg::EditAmount(RequestId { test_id, group_id }, e.value),>
             </input>
         }
     }

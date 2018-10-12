@@ -128,8 +128,8 @@ pub enum InventoryParseError {
     DecreasingRange { range: OwnedSpan },
 }
 
-impl From<pest::error::Error<Rule>> for InventoryParseError {
-    fn from(error: pest::error::Error<Rule>) -> Self {
+impl From<::pest::error::Error<Rule>> for InventoryParseError {
+    fn from(error: ::pest::error::Error<Rule>) -> Self {
         InventoryParseError::Syntax(error)
     }
 }
@@ -163,8 +163,8 @@ impl OwnedSpan {
     }
 }
 
-impl<'i, 'a> From<&'a pest::Span<'i>> for OwnedSpan {
-    fn from(span: &'a pest::Span) -> Self {
+impl<'i, 'a> From<&'a ::pest::Span<'i>> for OwnedSpan {
+    fn from(span: &'a ::pest::Span) -> Self {
         Self {
             text: span.as_str().into(),
             start: span.start(),
@@ -175,7 +175,7 @@ impl<'i, 'a> From<&'a pest::Span<'i>> for OwnedSpan {
 
 /// Parses a Pair that is of `Rule::range` or `Rule::number` into a Range, or returns
 /// an error if Range decreases in value..
-fn parse_ranges_from_rules(pair: pest::iterators::Pair<Rule>) -> Result<Range, ()> {
+fn parse_ranges_from_rules(pair: ::pest::iterators::Pair<Rule>) -> Result<Range, ()> {
     match pair.as_rule() {
         Rule::number => {
             Ok(Range::num(pair.as_str().parse().expect(

@@ -19,5 +19,6 @@ in
       myrust
       pkgconfig
       openssl
+      gcc
     ];
   }

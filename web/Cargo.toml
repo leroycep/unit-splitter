@@ -5,6 +5,6 @@ authors = ["LeRoyce Pearson <leroycepearson@geemili.xyz>"]
 
 [dependencies]
 stdweb = "0.4"
-yew = "0.3"
+yew = "0.4"
 unit-splitter-core = { path = "../core" }
 slab = "0.4"
