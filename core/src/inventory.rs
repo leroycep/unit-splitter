@@ -52,16 +52,23 @@ impl<'i> From<pest::Span<'i>> for OwnedSpan {
 #[derive(Fail, Debug, PartialEq)]
 pub enum InventoryParseError {
     #[fail(display = "Invalid syntax: {}", _0)]
-    Syntax(::pest::error::Error<Rule>),
+    Syntax(#[cause] ::pest::error::Error<Rule>),
 
-    #[fail(display = "Overlapping unit numbers: {:?}", overlaps)]
-    OverlappingUnits {
-        overlaps: Vec<(OwnedSpan, OwnedSpan)>,
+    #[fail(display = "Duplicate group name: group at {:?} has the same name as group at {:?}", duplicate, first)]
+    DuplicateGroup {
+        first: OwnedSpan,
+        duplicate: OwnedSpan,
     },
 
-    #[fail(display = "Duplicate group names: {:?}", duplicates)]
-    DuplicateGroups {
-        duplicates: Vec<(OwnedSpan, OwnedSpan)>,
+    #[fail(display = "Overlapping unit numbers: {:?} overlaps with {:?}", overlap, first)]
+    OverlappingRange {
+        first: OwnedSpan,
+        overlap: OwnedSpan,
+    },
+
+    #[fail(display = "Range goes from high to low: {:?}", range)]
+    DecreasingRange {
+        range: OwnedSpan,
     },
 }
 
@@ -71,11 +78,11 @@ impl From<pest::error::Error<Rule>> for InventoryParseError {
     }
 }
 
-pub fn parse(input: &str) -> Result<Vec<Group>, InventoryParseError> {
-    let mut parse = InventoryParser::parse(Rule::inventory, input)?;
+pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
+    let mut parse = InventoryParser::parse(Rule::inventory, input).map_err(|x| vec![x.into()])?;
     let inventory = parse.next().expect("If there is no input, SyntaxError is returned in the above statement");
     let mut groups = vec![];
-    let mut overlapping_ranges = vec![];
+    let mut errors = vec![];
     for group in inventory.into_inner() {
         match group.as_rule() {
             Rule::group => {
@@ -98,10 +105,15 @@ pub fn parse(input: &str) -> Result<Vec<Group>, InventoryParseError> {
                 for pair in inner {
                     let range = parse_ranges_from_rules(pair.clone());
 
+                    // Test to make sure that no unit numbers have been duplicated.
                     let mut overlaps = vec![];
                     interval_tree.overlap_search(&range, &mut overlaps);
                     for (_overlapping_range, overlapping_span) in overlaps {
-                        overlapping_ranges.push((pair.as_span().into(), overlapping_span.into()));
+                        let err = InventoryParseError::OverlappingRange {
+                            first: overlapping_span.into(),
+                            overlap: pair.as_span().into(),
+                        };
+                        errors.push(err);
                     }
 
                     interval_tree.insert(range.clone(), pair.as_span());
@@ -116,8 +128,8 @@ pub fn parse(input: &str) -> Result<Vec<Group>, InventoryParseError> {
         }
     }
 
-    if overlapping_ranges.len() > 0 {
-        Err(InventoryParseError::OverlappingUnits { overlaps: overlapping_ranges })
+    if errors.len() > 0 {
+        Err(errors)
     } else {
         Ok(groups)
     }
@@ -329,39 +341,22 @@ mod tests {
     #[test]
     fn overlapping_ranges() {
         let result = parse("1-10,5");
-
-        match result {
-            Ok(_) => panic!("Overlapping ranges should throw an error."),
-            Err(InventoryParseError::Syntax(_)) => panic!("Overlapping ranges are not a syntax error."),
-            Err(InventoryParseError::DuplicateGroups { duplicates: _ }) => panic!("Overlapping ranges are not a duplicate groups error."),
-            Err(InventoryParseError::OverlappingUnits { overlaps }) => {
-                assert!(overlaps.len() == 1);
-                let overlap = &overlaps[0];
-                let expected = &(OwnedSpan::new(5, 6, "5".into()), OwnedSpan::new(0, 4, "1-10".into()));
-
-                assert_eq!(overlap, expected);
+        assert_eq!(result, Err(vec![
+            InventoryParseError::OverlappingRange {
+                first: OwnedSpan::new(0, 4, "1-10".into()),
+                overlap: OwnedSpan::new(5, 6, "5".into()),
             }
-        }
+        ]));
     }
 
     #[test]
     fn duplicate_groups() {
         let result = parse("A=1-10, A=11-20");
-
-        match result {
-            Ok(_) => panic!("Duplicated groups should throw an error."),
-            Err(InventoryParseError::Syntax(_)) => panic!("Duplicated groups are not a syntax error."),
-            Err(InventoryParseError::OverlappingUnits { overlaps: _ }) => panic!("Duplicated groups are not a overlapping units error."),
-            Err(InventoryParseError::DuplicateGroups { duplicates }) => {
-                assert!(duplicates.len() == 1);
-                let duplicate = &duplicates[0];
-
-                assert_eq!(duplicate.0.start(), 0);
-                assert_eq!(duplicate.0.end(), 1);
-
-                assert_eq!(duplicate.1.start(), 8);
-                assert_eq!(duplicate.1.end(), 9);
+        assert_eq!(result, Err(vec![
+            InventoryParseError::DuplicateGroup {
+                first: OwnedSpan::new(0, 1, "A".into()),
+                duplicate: OwnedSpan::new(8, 9, "A".into()),
             }
-        }
+        ]));
     }
 }
