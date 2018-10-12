@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use yew::prelude::*;
 use yew::services::console::ConsoleService;
 use slab::Slab;
-use core::parse::parse_units;
+use core::inventory::parse as parse_inventory;
 use core::range::Range;
 use core::split::{RequestId, GroupId, TestId};
 
@@ -67,7 +67,7 @@ where
             Msg::GotUnits(value) => {
                 self.unit_string = value;
                 context.as_mut().log("unit string updated");
-                let parse = parse_units(&self.unit_string);
+                let parse = parse_inventory(&self.unit_string);
                 context.as_mut().log(&format!("parse: {:?}", parse));
                 match parse {
                     Ok(parse) => {
