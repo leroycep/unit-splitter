@@ -3,6 +3,7 @@ use group::Group;
 use range::Range;
 use pest::Parser;
 use ::interval_tree::IntervalTree;
+use std::collections::HashMap;
 
 #[derive(Parser)]
 #[grammar = "inventory.pest"]
@@ -39,8 +40,8 @@ impl OwnedSpan {
     }
 }
 
-impl<'i> From<pest::Span<'i>> for OwnedSpan {
-    fn from(span: pest::Span) -> Self {
+impl<'i, 'a> From<&'a pest::Span<'i>> for OwnedSpan {
+    fn from(span: &'a pest::Span) -> Self {
         Self {
             text: span.as_str().into(),
             start: span.start(),
@@ -82,6 +83,7 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
     let mut parse = InventoryParser::parse(Rule::inventory, input).map_err(|x| vec![x.into()])?;
     let inventory = parse.next().expect("If there is no input, SyntaxError is returned in the above statement");
     let mut groups = vec![];
+    let mut group_spans: HashMap<_, ::pest::Span> = HashMap::new();
     let mut errors = vec![];
     for group in inventory.into_inner() {
         match group.as_rule() {
@@ -95,6 +97,20 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
                 let name;
                 if first.as_rule() == Rule::name {
                     name = String::from(first.as_str());
+
+                    // Test if another group with this name has been defined
+                    if group_spans.contains_key(&name) {
+                        // TODO: Rearrange with NonLexicalLifetimes...
+                        let first_group_span = group_spans.get(&name).unwrap();
+                        let err = InventoryParseError::DuplicateGroup {
+                            first: first_group_span.into(),
+                            duplicate: (&first.as_span()).into(),
+                        };
+                        errors.push(err);
+                    } else {
+                        group_spans.insert(name.clone(), first.as_span());
+                    }
+
                 } else {
                     name = String::new();
                     let range = parse_ranges_from_rules(first.clone());
@@ -110,8 +126,8 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
                     interval_tree.overlap_search(&range, &mut overlaps);
                     for (_overlapping_range, overlapping_span) in overlaps {
                         let err = InventoryParseError::OverlappingRange {
-                            first: overlapping_span.into(),
-                            overlap: pair.as_span().into(),
+                            first: (&overlapping_span).into(),
+                            overlap: (&pair.as_span()).into(),
                         };
                         errors.push(err);
                     }
@@ -356,6 +372,16 @@ mod tests {
             InventoryParseError::DuplicateGroup {
                 first: OwnedSpan::new(0, 1, "A".into()),
                 duplicate: OwnedSpan::new(8, 9, "A".into()),
+            }
+        ]));
+    }
+
+    #[test]
+    fn decreasing_range() {
+        let result = parse("20-11");
+        assert_eq!(result, Err(vec![
+            InventoryParseError::DecreasingRange {
+                range: OwnedSpan::new(0, 5, "20-11".into()),
             }
         ]));
     }
