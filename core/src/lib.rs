@@ -1,4 +1,3 @@
-
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
@@ -9,9 +8,8 @@ extern crate pest;
 extern crate pest_derive;
 
 pub mod group;
-pub mod range;
-pub mod unit_requests;
-pub mod split;
 pub mod interval_tree;
 pub mod inventory;
-
+pub mod range;
+pub mod split;
+pub mod unit_requests;

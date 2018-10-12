@@ -1,6 +1,5 @@
-
-use std::collections::HashMap;
 use slab::Slab;
+use std::collections::HashMap;
 
 type TestId = usize;
 type GroupId = usize;
@@ -24,7 +23,10 @@ impl UnitRequests {
     }
 
     pub fn get_amount(&self, test_id: usize, group_id: usize) -> usize {
-        self.amounts.get(&(test_id, group_id)).map(|e| *e).unwrap_or(0)
+        self.amounts
+            .get(&(test_id, group_id))
+            .map(|e| *e)
+            .unwrap_or(0)
     }
 
     pub fn set_amount(&mut self, test_id: usize, group_id: usize, amount: usize) {
@@ -33,11 +35,9 @@ impl UnitRequests {
 
     pub fn remove_test(&mut self, test_id: usize) {
         self.tests.remove(test_id);
-        self.amounts.retain(
-            |(test_id_key, _group_id), _value| *test_id_key != test_id
-        );
+        self.amounts
+            .retain(|(test_id_key, _group_id), _value| *test_id_key != test_id);
     }
-
 }
 
 #[cfg(test)]

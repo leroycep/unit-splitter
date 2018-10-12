@@ -1,87 +1,18 @@
-
 use group::Group;
-use range::Range;
+use interval_tree::IntervalTree;
 use pest::Parser;
-use ::interval_tree::IntervalTree;
+use range::Range;
 use std::collections::HashMap;
 
 #[derive(Parser)]
 #[grammar = "inventory.pest"]
 pub struct InventoryParser;
 
-/// An owned version of `pest::Span` that can be put into error types easily.
-#[derive(PartialEq, Clone, Debug)]
-pub struct OwnedSpan {
-    /// The start of this text in the original string
-    start: usize,
-    /// The end of this text in the original string
-    end: usize,
-    /// A copy of the text that this Span represents
-    text: String,
-}
-
-impl OwnedSpan {
-    pub fn new(start: usize, end: usize, text: String) -> Self {
-        Self {
-            start, end, text
-        }
-    }
-
-    pub fn start(&self) -> usize {
-        self.start
-    }
-
-    pub fn end(&self) -> usize {
-        self.end
-    }
-
-    pub fn text(&self) -> &str {
-        &self.text
-    }
-}
-
-impl<'i, 'a> From<&'a pest::Span<'i>> for OwnedSpan {
-    fn from(span: &'a pest::Span) -> Self {
-        Self {
-            text: span.as_str().into(),
-            start: span.start(),
-            end: span.end(),
-        }
-    }
-}
-
-#[derive(Fail, Debug, PartialEq)]
-pub enum InventoryParseError {
-    #[fail(display = "Invalid syntax: {}", _0)]
-    Syntax(#[cause] ::pest::error::Error<Rule>),
-
-    #[fail(display = "Duplicate group name: group at {:?} has the same name as group at {:?}", duplicate, first)]
-    DuplicateGroup {
-        first: OwnedSpan,
-        duplicate: OwnedSpan,
-    },
-
-    #[fail(display = "Overlapping unit numbers: {:?} overlaps with {:?}", overlap, first)]
-    OverlappingRange {
-        first: OwnedSpan,
-        overlap: OwnedSpan,
-    },
-
-    #[fail(display = "Range goes from high to low: {:?}", range)]
-    DecreasingRange {
-        range: OwnedSpan,
-    },
-}
-
-impl From<pest::error::Error<Rule>> for InventoryParseError {
-    fn from(error: pest::error::Error<Rule>) -> Self {
-        InventoryParseError::Syntax(error)
-    }
-}
-
 pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
     let mut parse = InventoryParser::parse(Rule::inventory, input).map_err(|x| vec![x.into()])?;
-    let inventory = parse.next().expect("If there is no input, SyntaxError is returned in the above statement");
+    let inventory = parse
+        .next()
+        .expect("If there is no input, SyntaxError is returned in the above statement");
     let mut groups = vec![];
     let mut group_spans: HashMap<_, ::pest::Span> = HashMap::new();
     let mut errors = vec![];
@@ -110,7 +41,6 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
                     } else {
                         group_spans.insert(name.clone(), first.as_span());
                     }
-
                 } else {
                     name = String::new();
                     match parse_ranges_from_rules(first.clone()) {
@@ -119,7 +49,9 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
                             ranges.push(range);
                         }
                         Err(()) => {
-                            errors.push(InventoryParseError::DecreasingRange { range: (&first.as_span()).into() });
+                            errors.push(InventoryParseError::DecreasingRange {
+                                range: (&first.as_span()).into(),
+                            });
                             continue;
                         }
                     };
@@ -130,7 +62,9 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
                     let range = match range {
                         Ok(r) => r,
                         Err(()) => {
-                            errors.push(InventoryParseError::DecreasingRange { range: (&pair.as_span()).into() });
+                            errors.push(InventoryParseError::DecreasingRange {
+                                range: (&pair.as_span()).into(),
+                            });
                             continue;
                         }
                     };
@@ -165,17 +99,103 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
     }
 }
 
+#[derive(Fail, Debug, PartialEq)]
+pub enum InventoryParseError {
+    #[fail(display = "Invalid syntax: {}", _0)]
+    Syntax(#[cause] ::pest::error::Error<Rule>),
+
+    #[fail(
+        display = "Duplicate group name: group at {:?} has the same name as group at {:?}",
+        duplicate,
+        first
+    )]
+    DuplicateGroup {
+        first: OwnedSpan,
+        duplicate: OwnedSpan,
+    },
+
+    #[fail(
+        display = "Overlapping unit numbers: {:?} overlaps with {:?}",
+        overlap,
+        first
+    )]
+    OverlappingRange {
+        first: OwnedSpan,
+        overlap: OwnedSpan,
+    },
+
+    #[fail(display = "Range goes from high to low: {:?}", range)]
+    DecreasingRange { range: OwnedSpan },
+}
+
+impl From<pest::error::Error<Rule>> for InventoryParseError {
+    fn from(error: pest::error::Error<Rule>) -> Self {
+        InventoryParseError::Syntax(error)
+    }
+}
+
+/// An owned version of `pest::Span` that can be put into error types easily.
+#[derive(PartialEq, Clone, Debug)]
+pub struct OwnedSpan {
+    /// The start of this text in the original string
+    start: usize,
+    /// The end of this text in the original string
+    end: usize,
+    /// A copy of the text that this Span represents
+    text: String,
+}
+
+impl OwnedSpan {
+    pub fn new(start: usize, end: usize, text: String) -> Self {
+        Self { start, end, text }
+    }
+
+    pub fn start(&self) -> usize {
+        self.start
+    }
+
+    pub fn end(&self) -> usize {
+        self.end
+    }
+
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+}
+
+impl<'i, 'a> From<&'a pest::Span<'i>> for OwnedSpan {
+    fn from(span: &'a pest::Span) -> Self {
+        Self {
+            text: span.as_str().into(),
+            start: span.start(),
+            end: span.end(),
+        }
+    }
+}
+
 /// Parses a Pair that is of `Rule::range` or `Rule::number` into a Range, or returns
 /// an error if Range decreases in value..
 fn parse_ranges_from_rules(pair: pest::iterators::Pair<Rule>) -> Result<Range, ()> {
     match pair.as_rule() {
         Rule::number => {
-            Ok(Range::num(pair.as_str().parse().expect("The number rule should be parseable by rust number parser")))
+            Ok(Range::num(pair.as_str().parse().expect(
+                "The number rule should be parseable by rust number parser",
+            )))
         }
         Rule::range => {
             let mut inner = pair.into_inner();
-            let first = inner.next().expect("Rule::range must have two numbers").as_str().parse().expect("Number rule should be parseable by rust number parser");
-            let last = inner.next().expect("Rule::range must have two numbers").as_str().parse().expect("Number rule should be parseable by rust number parser");
+            let first = inner
+                .next()
+                .expect("Rule::range must have two numbers")
+                .as_str()
+                .parse()
+                .expect("Number rule should be parseable by rust number parser");
+            let last = inner
+                .next()
+                .expect("Rule::range must have two numbers")
+                .as_str()
+                .parse()
+                .expect("Number rule should be parseable by rust number parser");
             if first > last {
                 Err(())
             } else {
@@ -188,8 +208,8 @@ fn parse_ranges_from_rules(pair: pest::iterators::Pair<Rule>) -> Result<Range, (
 
 #[cfg(test)]
 mod tests {
-    use inventory::{InventoryParser, Rule, InventoryParseError, OwnedSpan, parse};
     use group::Group;
+    use inventory::{parse, InventoryParseError, InventoryParser, OwnedSpan, Rule};
     use range::Range;
 
     #[test]
@@ -363,12 +383,10 @@ mod tests {
     #[test]
     fn parse_units_into_types() {
         let result = parse("1-10,12");
-        let expected = vec![
-            Group::new("".to_string(), vec![
-                Range::new(1, 10),
-                Range::num(12),
-            ])
-        ];
+        let expected = vec![Group::new(
+            "".to_string(),
+            vec![Range::new(1, 10), Range::num(12)],
+        )];
 
         assert_eq!(result, Ok(expected));
     }
@@ -376,32 +394,35 @@ mod tests {
     #[test]
     fn overlapping_ranges() {
         let result = parse("1-10,5");
-        assert_eq!(result, Err(vec![
-            InventoryParseError::OverlappingRange {
+        assert_eq!(
+            result,
+            Err(vec![InventoryParseError::OverlappingRange {
                 first: OwnedSpan::new(0, 4, "1-10".into()),
                 overlap: OwnedSpan::new(5, 6, "5".into()),
-            }
-        ]));
+            }])
+        );
     }
 
     #[test]
     fn duplicate_groups() {
         let result = parse("A=1-10, A=11-20");
-        assert_eq!(result, Err(vec![
-            InventoryParseError::DuplicateGroup {
+        assert_eq!(
+            result,
+            Err(vec![InventoryParseError::DuplicateGroup {
                 first: OwnedSpan::new(0, 1, "A".into()),
                 duplicate: OwnedSpan::new(8, 9, "A".into()),
-            }
-        ]));
+            }])
+        );
     }
 
     #[test]
     fn decreasing_range() {
         let result = parse("20-11");
-        assert_eq!(result, Err(vec![
-            InventoryParseError::DecreasingRange {
+        assert_eq!(
+            result,
+            Err(vec![InventoryParseError::DecreasingRange {
                 range: OwnedSpan::new(0, 5, "20-11".into()),
-            }
-        ]));
+            }])
+        );
     }
 }

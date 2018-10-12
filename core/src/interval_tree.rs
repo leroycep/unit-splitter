@@ -1,15 +1,13 @@
 // Used to learn from: https://www.geeksforgeeks.org/interval-tree/
 
-use ::range::Range;
+use range::Range;
 
 pub struct IntervalTree<D: Clone> {
     node: Option<IntervalTreeNode<D>>,
 }
 impl<D: Clone> IntervalTree<D> {
     pub fn new() -> Self {
-        Self {
-            node: None,
-        }
+        Self { node: None }
     }
 
     pub fn insert(&mut self, interval: Range, data: D) {
@@ -44,7 +42,7 @@ impl<D: Clone> IntervalTreeNode<D> {
             interval,
             max,
             left,
-            right
+            right,
         }
     }
 

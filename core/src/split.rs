@@ -1,7 +1,6 @@
-
 use range::Range;
-use std::collections::VecDeque;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 
 pub type GroupId = usize;
 pub type TestId = usize;
@@ -14,7 +13,12 @@ pub struct RequestId {
 
 pub type Ranges = HashMap<GroupId, VecDeque<Range>>;
 
-pub fn split(ranges: &Ranges, requests: &HashMap<RequestId, usize>, test_order: &[TestId], group_order: &[GroupId]) -> Result<(HashMap<TestId, Ranges>, Ranges), ()> {
+pub fn split(
+    ranges: &Ranges,
+    requests: &HashMap<RequestId, usize>,
+    test_order: &[TestId],
+    group_order: &[GroupId],
+) -> Result<(HashMap<TestId, Ranges>, Ranges), ()> {
     let mut group_ranges = ranges.clone();
     let mut used_group_ranges = HashMap::new();
     for &test_id in test_order.iter() {
@@ -23,7 +27,9 @@ pub fn split(ranges: &Ranges, requests: &HashMap<RequestId, usize>, test_order: 
             let amount = requests.get(&request_id).unwrap_or(&0);
 
             let mut amount = *amount;
-            let mut ranges = group_ranges.get_mut(&group_id).expect("request calls for non-existing group");
+            let mut ranges = group_ranges
+                .get_mut(&group_id)
+                .expect("request calls for non-existing group");
             let mut used_ranges = VecDeque::new();
 
             while amount > 0 {
@@ -44,5 +50,5 @@ pub fn split(ranges: &Ranges, requests: &HashMap<RequestId, usize>, test_order: 
             test_ranges.insert(group_id, used_ranges);
         }
     }
-    return Ok((used_group_ranges, group_ranges ));
+    return Ok((used_group_ranges, group_ranges));
 }

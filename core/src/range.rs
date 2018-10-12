@@ -1,4 +1,3 @@
-
 #[derive(Hash, Eq, PartialEq, Clone, Debug)]
 pub struct Range {
     first: usize,
@@ -12,7 +11,10 @@ impl Range {
 
     /// A convience function for a range of size one
     pub fn num(num: usize) -> Self {
-        Self { first: num, last: num }
+        Self {
+            first: num,
+            last: num,
+        }
     }
 
     pub fn first(&self) -> usize {
@@ -43,7 +45,11 @@ impl Range {
         } else {
             let other_first = self.first + amount;
             let this_last = other_first - 1;
-            (Range::new(self.first, this_last), Some(Range::new(other_first, self.last)), 0)
+            (
+                Range::new(self.first, this_last),
+                Some(Range::new(other_first, self.last)),
+                0,
+            )
         }
     }
 
@@ -71,6 +77,9 @@ mod tests {
     #[test]
     fn split() {
         let range = Range::new(1, 10);
-        assert_eq!(range.split(5), (Range::new(1, 5), Some(Range::new(6, 10)), 0));
+        assert_eq!(
+            range.split(5),
+            (Range::new(1, 5), Some(Range::new(6, 10)), 0)
+        );
     }
 }

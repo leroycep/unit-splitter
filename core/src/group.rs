@@ -1,4 +1,3 @@
-
 use range::Range;
 
 #[derive(PartialEq, Clone, Debug)]
