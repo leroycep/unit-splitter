@@ -113,13 +113,27 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
 
                 } else {
                     name = String::new();
-                    let range = parse_ranges_from_rules(first.clone());
-                    interval_tree.insert(range.clone(), first.as_span());
-                    ranges.push(range);
+                    match parse_ranges_from_rules(first.clone()) {
+                        Ok(range) => {
+                            interval_tree.insert(range.clone(), first.as_span());
+                            ranges.push(range);
+                        }
+                        Err(()) => {
+                            errors.push(InventoryParseError::DecreasingRange { range: (&first.as_span()).into() });
+                            continue;
+                        }
+                    };
                 }
 
                 for pair in inner {
                     let range = parse_ranges_from_rules(pair.clone());
+                    let range = match range {
+                        Ok(r) => r,
+                        Err(()) => {
+                            errors.push(InventoryParseError::DecreasingRange { range: (&pair.as_span()).into() });
+                            continue;
+                        }
+                    };
 
                     // Test to make sure that no unit numbers have been duplicated.
                     let mut overlaps = vec![];
@@ -151,17 +165,22 @@ pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
     }
 }
 
-/// Parses a Pair that is of `Rule::range` or `Rule::number` into a Range
-fn parse_ranges_from_rules(pair: pest::iterators::Pair<Rule>) -> Range {
+/// Parses a Pair that is of `Rule::range` or `Rule::number` into a Range, or returns
+/// an error if Range decreases in value..
+fn parse_ranges_from_rules(pair: pest::iterators::Pair<Rule>) -> Result<Range, ()> {
     match pair.as_rule() {
         Rule::number => {
-            Range::num(pair.as_str().parse().expect("The number rule should be parseable by rust number parser"))
+            Ok(Range::num(pair.as_str().parse().expect("The number rule should be parseable by rust number parser")))
         }
         Rule::range => {
             let mut inner = pair.into_inner();
             let first = inner.next().expect("Rule::range must have two numbers").as_str().parse().expect("Number rule should be parseable by rust number parser");
             let last = inner.next().expect("Rule::range must have two numbers").as_str().parse().expect("Number rule should be parseable by rust number parser");
-            Range::new(first, last)
+            if first > last {
+                Err(())
+            } else {
+                Ok(Range::new(first, last))
+            }
         }
         _ => unreachable!(),
     }
