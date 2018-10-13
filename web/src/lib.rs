@@ -134,7 +134,6 @@ impl Model {
 fn view_filled_request((request_name, groups): (&String, &Vec<Group>)) -> Html<Model> {
     html! {
         <div>
-            <h1>{ "Output" }</h1>
             <div class="indent",>
                 { format!("{}, {:?}", request_name, groups) }
             </div>
