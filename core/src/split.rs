@@ -1,54 +1,196 @@
+use group::Group;
 use range::Range;
+use request::Request;
 use std::collections::HashMap;
-use std::collections::VecDeque;
 
-pub type GroupId = usize;
-pub type TestId = usize;
+pub fn split(inventory: &[Group], requests: &[Request]) -> Result<Split, SplitError> {
+    let mut inventory = inventory.to_vec();
+    let mut filled_requests = HashMap::new();
+    for request in requests {
+        let mut groups_used_ranges = vec![];
+        for (group_idx, amount) in request.amounts().iter().enumerate() {
+            let group = match inventory.get_mut(group_idx) {
+                Some(group) => group,
+                None => {
+                    // This request is asking for units from a non existant group.
+                    // Is an error, because it would only allow excluding groups
+                    // at the end. May be added back as a feature later.
+                    return Err(SplitError::TooManyGroupsRequested {
+                        request_name: request.name().into(),
+                    });
+                }
+            };
 
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub struct RequestId {
-    pub group_id: GroupId,
-    pub test_id: TestId,
+            let unused = {
+                // TODO: NonLexicalLifetimes strikes again!
+                let ranges = group.ranges();
+
+                match split_ranges(ranges, *amount) {
+                    Ok((used, unused)) => {
+                        groups_used_ranges.push(group.with_ranges(used));
+                        unused
+                    }
+
+                    Err(amount_needed) => {
+                        return Err(SplitError::NotEnough {
+                            group_name: group.name().into(),
+                            amount_needed: amount_needed,
+                        });
+                    }
+                }
+            };
+            *group = group.with_ranges(unused);
+        }
+        filled_requests.insert(request.name().into(), groups_used_ranges);
+    }
+    return Ok(Split {
+        filled_requests: filled_requests,
+        leftover_ranges: inventory,
+    });
 }
 
-pub type Ranges = HashMap<GroupId, VecDeque<Range>>;
+#[derive(Debug, PartialEq)]
+pub struct Split {
+    filled_requests: HashMap<String, Vec<Group>>,
+    leftover_ranges: Vec<Group>,
+}
 
-pub fn split(
-    ranges: &Ranges,
-    requests: &HashMap<RequestId, usize>,
-    test_order: &[TestId],
-    group_order: &[GroupId],
-) -> Result<(HashMap<TestId, Ranges>, Ranges), ()> {
-    let mut group_ranges = ranges.clone();
-    let mut used_group_ranges = HashMap::new();
-    for &test_id in test_order.iter() {
-        for &group_id in group_order.iter() {
-            let request_id = RequestId { test_id, group_id };
-            let amount = requests.get(&request_id).unwrap_or(&0);
+#[derive(Fail, Debug, PartialEq)]
+pub enum SplitError {
+    #[fail(
+        display = "There are not enough units in group {}. {} more needed",
+        group_name,
+        amount_needed
+    )]
+    NotEnough {
+        group_name: String,
+        amount_needed: u32,
+    },
 
-            let mut amount = *amount;
-            let mut ranges = group_ranges
-                .get_mut(&group_id)
-                .expect("request calls for non-existing group");
-            let mut used_ranges = VecDeque::new();
+    #[fail(
+        display = "The request \"{}\" is asking for units from a non-existant group.",
+        request_name
+    )]
+    TooManyGroupsRequested { request_name: String },
+}
 
-            while amount > 0 {
-                let range = ranges.pop_front();
-                if range.is_none() {
-                    return Err(());
-                }
-                let range = range.expect("if returns error before this line can be reached");
-                let (used, unused, amount_left) = range.split(amount);
-                amount = amount_left;
-                used_ranges.push_back(used);
-                if let Some(range) = unused {
-                    ranges.push_front(range);
-                }
-            }
+fn split_ranges(ranges: &[Range], mut amount: u32) -> Result<(Vec<Range>, Vec<Range>), u32> {
+    let mut ranges_iter = ranges.iter();
+    let mut used_ranges = Vec::new();
+    let mut unused_ranges = Vec::new();
+    loop {
+        let range = match ranges_iter.next() {
+            Some(r) => r,
+            None => break,
+        };
+        let (used, unused, amount_left) = range.split(amount);
 
-            let test_ranges = used_group_ranges.entry(test_id).or_insert(Ranges::new());
-            test_ranges.insert(group_id, used_ranges);
+        used_ranges.push(used);
+        amount = amount_left;
+        if let Some(range) = unused {
+            unused_ranges.push(range);
+            break;
         }
     }
-    return Ok((used_group_ranges, group_ranges));
+    if amount > 0 {
+        Err(amount)
+    } else {
+        unused_ranges.extend(ranges_iter.map(|x| x.clone()));
+        Ok((used_ranges, unused_ranges))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use group::Group;
+    use range::Range;
+    use request::Request;
+    use split::{split, Split, SplitError};
+    use std::collections::HashMap;
+
+    #[test]
+    fn simple() {
+        let inventory = vec![
+            Group::new("A".into(), vec![Range::new(1, 100)]),
+            Group::new("B".into(), vec![Range::new(101, 200)]),
+            Group::new("C".into(), vec![Range::new(201, 300)]),
+        ];
+        let requests = vec![
+            Request::new("X".into(), vec![32, 32, 32]),
+            Request::new("Y".into(), vec![32, 32, 32]),
+            Request::new("Z".into(), vec![32, 32, 32]),
+        ];
+
+        let result = split(&inventory, &requests);
+
+        let mut expected_filled = HashMap::new();
+        expected_filled.insert(
+            "X".into(),
+            vec![
+                Group::new("A".into(), vec![Range::new(1, 32)]),
+                Group::new("B".into(), vec![Range::new(101, 132)]),
+                Group::new("C".into(), vec![Range::new(201, 232)]),
+            ],
+        );
+        expected_filled.insert(
+            "Y".into(),
+            vec![
+                Group::new("A".into(), vec![Range::new(33, 64)]),
+                Group::new("B".into(), vec![Range::new(133, 164)]),
+                Group::new("C".into(), vec![Range::new(233, 264)]),
+            ],
+        );
+        expected_filled.insert(
+            "Z".into(),
+            vec![
+                Group::new("A".into(), vec![Range::new(65, 96)]),
+                Group::new("B".into(), vec![Range::new(165, 196)]),
+                Group::new("C".into(), vec![Range::new(265, 296)]),
+            ],
+        );
+
+        assert_eq!(
+            result,
+            Ok(Split {
+                filled_requests: expected_filled,
+                leftover_ranges: vec![
+                    Group::new("A".into(), vec![Range::new(97, 100)]),
+                    Group::new("B".into(), vec![Range::new(197, 200)]),
+                    Group::new("C".into(), vec![Range::new(297, 300)]),
+                ],
+            })
+        );
+    }
+
+    #[test]
+    fn not_enough() {
+        let inventory = vec![Group::new("A".into(), vec![Range::new(1, 10)])];
+        let requests = vec![Request::new("X".into(), vec![32])];
+
+        let result = split(&inventory, &requests);
+
+        assert_eq!(
+            result,
+            Err(SplitError::NotEnough {
+                group_name: "A".into(),
+                amount_needed: 22,
+            })
+        );
+    }
+
+    #[test]
+    fn greedy_request() {
+        let inventory = vec![Group::new("A".into(), vec![Range::new(1, 10)])];
+        let requests = vec![Request::new("X".into(), vec![10, 10])];
+
+        let result = split(&inventory, &requests);
+
+        assert_eq!(
+            result,
+            Err(SplitError::TooManyGroupsRequested {
+                request_name: "X".into(),
+            })
+        );
+    }
+
 }

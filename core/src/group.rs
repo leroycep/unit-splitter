@@ -11,6 +11,13 @@ impl Group {
         Self { name, ranges }
     }
 
+    pub fn with_ranges(&self, ranges: Vec<Range>) -> Self {
+        Self {
+            name: self.name.clone(),
+            ranges,
+        }
+    }
+
     pub fn name(&self) -> &str {
         self.name.as_str()
     }
@@ -19,7 +26,7 @@ impl Group {
         &self.ranges
     }
 
-    pub fn count(&self) -> usize {
+    pub fn count(&self) -> u32 {
         self.ranges.iter().map(|r| r.count()).sum()
     }
 }

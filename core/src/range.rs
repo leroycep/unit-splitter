@@ -1,31 +1,31 @@
 #[derive(Hash, Eq, PartialEq, Clone, Debug)]
 pub struct Range {
-    first: usize,
-    last: usize,
+    first: u32,
+    last: u32,
 }
 
 impl Range {
-    pub fn new(first: usize, last: usize) -> Self {
+    pub fn new(first: u32, last: u32) -> Self {
         Self { first, last }
     }
 
     /// A convience function for a range of size one
-    pub fn num(num: usize) -> Self {
+    pub fn num(num: u32) -> Self {
         Self {
             first: num,
             last: num,
         }
     }
 
-    pub fn first(&self) -> usize {
+    pub fn first(&self) -> u32 {
         self.first
     }
 
-    pub fn last(&self) -> usize {
+    pub fn last(&self) -> u32 {
         self.last
     }
 
-    pub fn count(&self) -> usize {
+    pub fn count(&self) -> u32 {
         self.last - self.first + 1
     }
 
@@ -38,7 +38,7 @@ impl Range {
         }
     }
 
-    pub fn split(&self, amount: usize) -> (Self, Option<Self>, usize) {
+    pub fn split(&self, amount: u32) -> (Self, Option<Self>, u32) {
         assert!(amount != 0);
         if amount >= self.count() {
             (self.clone(), None, amount - self.count())

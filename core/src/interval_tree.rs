@@ -27,7 +27,7 @@ impl<D: Clone> IntervalTree<D> {
 pub struct IntervalTreeNode<D: Clone> {
     data: D,
     interval: Range,
-    max: usize,
+    max: u32,
     left: Option<Box<IntervalTreeNode<D>>>,
     right: Option<Box<IntervalTreeNode<D>>>,
 }
