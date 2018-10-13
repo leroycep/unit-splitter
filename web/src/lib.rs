@@ -107,7 +107,16 @@ impl Model {
                     </textarea>
                 </div>
                 <div class="inventory-result",>
-                    { format!("{:?}", self.inventory) }
+                    {{
+                        use std::fmt::Write;
+                        let mut s = String::new();
+                        if let Err(ref errors) = self.inventory {
+                            for e in errors {
+                                writeln!(s, "{}", e);
+                            }
+                        }
+                        s
+                    }}
                 </div>
 
                 <div>
@@ -119,7 +128,16 @@ impl Model {
                     </textarea>
                 </div>
                 <div class="requests-result",>
-                    { format!("{:?}", self.requests) }
+                    {{
+                        use std::fmt::Write;
+                        let mut s = String::new();
+                        if let Err(ref errors) = self.requests {
+                            for e in errors {
+                                writeln!(s, "{}", e);
+                            }
+                        }
+                        s
+                    }}
                 </div>
 
                 <div class="output",>
