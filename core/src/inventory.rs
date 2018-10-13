@@ -103,7 +103,7 @@ pub fn parse(input: &str) -> InventoryParseResult {
 
 #[derive(Fail, Debug, PartialEq)]
 pub enum InventoryParseError {
-    #[fail(display = "Invalid syntax: {}", _0)]
+    #[fail(display = "Invalid syntax:\n{}", _0)]
     Syntax(#[cause] ::pest::error::Error<Rule>),
 
     #[fail(
