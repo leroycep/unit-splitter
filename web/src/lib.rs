@@ -134,7 +134,7 @@ fn view_filled_request((request_name, groups): (&String, &Vec<Group>)) -> Html<M
     html! {
         <div>
             <div class="indent",>
-                { format!("{}, {}", request_name, core::group::Groups(groups)) }
+                { format!("{}: {}", request_name, core::group::Groups(groups)) }
             </div>
         </div>
     }
