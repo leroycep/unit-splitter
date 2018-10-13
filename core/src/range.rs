@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Hash, Eq, PartialEq, Clone, Debug)]
 pub struct Range {
     first: u32,
@@ -58,6 +60,16 @@ impl Range {
     }
 }
 
+impl fmt::Display for Range {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.first == self.last {
+            write!(f, "{}", self.first)
+        } else {
+            write!(f, "{}-{}", self.first, self.last)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -81,5 +93,17 @@ mod tests {
             range.split(5),
             (Range::new(1, 5), Some(Range::new(6, 10)), 0)
         );
+    }
+
+    #[test]
+    fn format_single() {
+        let range = Range::new(696, 696);
+        assert_eq!(format!("{}", range), "696");
+    }
+
+    #[test]
+    fn format_range() {
+        let range = Range::new(1, 10);
+        assert_eq!(format!("{}", range), "1-10");
     }
 }

@@ -1,4 +1,5 @@
 use range::Range;
+use std::fmt;
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Group {
@@ -31,6 +32,24 @@ impl Group {
     }
 }
 
+impl fmt::Display for Group {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.name != "" {
+            write!(f, "{}=", self.name)?;
+        }
+        let mut need_comma = false;
+        for range in &self.ranges {
+            if need_comma {
+                write!(f, ",{}", range)?;
+            } else {
+                write!(f, "{}", range)?;
+                need_comma = true;
+            }
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -40,5 +59,17 @@ mod tests {
     fn it_works() {
         let range = Range::new(1, 50);
         let _group = Group::new("A".into(), vec![range]);
+    }
+
+    #[test]
+    fn format_no_name() {
+        let group = Group::new("".into(), vec![Range::new(1, 50), Range::num(61)]);
+        assert_eq!(format!("{}", group), "1-50,61");
+    }
+
+    #[test]
+    fn format_with_name() {
+        let group = Group::new("A".into(), vec![Range::new(1, 50), Range::num(61)]);
+        assert_eq!(format!("{}", group), "A=1-50,61");
     }
 }

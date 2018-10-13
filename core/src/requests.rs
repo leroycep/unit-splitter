@@ -7,7 +7,7 @@ pub struct RequestsParser;
 
 pub type RequestsParseResult = Result<Vec<Request>, Vec<RequestsParseError>>;
 
-pub fn parse(input: &str) ->  RequestsParseResult {
+pub fn parse(input: &str) -> RequestsParseResult {
     let mut parse = RequestsParser::parse(Rule::requests, input).map_err(|x| vec![x.into()])?;
     let requests = parse
         .next()
