@@ -3,7 +3,9 @@ use range::Range;
 use request::Request;
 use std::collections::HashMap;
 
-pub fn split(inventory: &[Group], requests: &[Request]) -> Result<Split, SplitError> {
+pub type SplitResult = Result<Split, SplitError>;
+
+pub fn split(inventory: &[Group], requests: &[Request]) -> SplitResult {
     let mut inventory = inventory.to_vec();
     let mut filled_requests = HashMap::new();
     for request in requests {

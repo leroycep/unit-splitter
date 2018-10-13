@@ -7,7 +7,7 @@ extern crate unit_splitter_core as core;
 
 use core::inventory::{self, InventoryParseResult};
 use core::requests::{self, RequestsParseResult};
-use core::split::Split;
+use core::split::{self, Split, SplitResult};
 use yew::prelude::*;
 
 const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -23,6 +23,7 @@ pub struct Model {
     requests_string: String,
     inventory: InventoryParseResult,
     requests: RequestsParseResult,
+    split: SplitResult,
 }
 
 pub enum Msg {
@@ -40,6 +41,10 @@ impl Component for Model {
             requests_string: "".into(),
             inventory: inventory::parse(""),
             requests: requests::parse(""),
+            split: Ok(core::split::Split {
+                filled_requests: std::collections::HashMap::new(),
+                leftover_ranges: Vec::new(),
+            }),
         }
     }
 
@@ -54,6 +59,14 @@ impl Component for Model {
                 self.requests = requests::parse(&self.requests_string);
             }
         }
+        match (&self.inventory, &self.requests) {
+            (Ok(inventory), Ok(requests)) => {
+                self.split = split::split(&inventory, &requests);
+            }
+            _ => {
+                // TODO: Make it apparent when output and input are desynchronized?
+            }
+        };
         true
     }
 }
@@ -91,12 +104,7 @@ impl Renderable<Model> for Model {
 
 impl Model {
     fn view_output(&self) -> Html<Model> {
-        use core::split::split;
-        let (inventory, requests) = match (&self.inventory, &self.requests) {
-            (Ok(i), Ok(r)) => (i, r),
-            _ => return html! { <div> <h1>{ "Output" }</h1> </div> },
-        };
-        match split(&inventory, &requests) {
+        match &self.split {
             Ok(Split {
                 filled_requests: _,
                 leftover_ranges: _,
