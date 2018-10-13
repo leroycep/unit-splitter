@@ -51,8 +51,8 @@ pub fn split(inventory: &[Group], requests: &[Request]) -> Result<Split, SplitEr
 
 #[derive(Debug, PartialEq)]
 pub struct Split {
-    filled_requests: HashMap<String, Vec<Group>>,
-    leftover_ranges: Vec<Group>,
+    pub filled_requests: HashMap<String, Vec<Group>>,
+    pub leftover_ranges: Vec<Group>,
 }
 
 #[derive(Fail, Debug, PartialEq)]

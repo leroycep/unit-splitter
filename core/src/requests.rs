@@ -5,7 +5,9 @@ use request::Request;
 #[grammar = "requests.pest"]
 pub struct RequestsParser;
 
-pub fn parse(input: &str) -> Result<Vec<Request>, Vec<RequestsParseError>> {
+pub type RequestsParseResult = Result<Vec<Request>, Vec<RequestsParseError>>;
+
+pub fn parse(input: &str) ->  RequestsParseResult {
     let mut parse = RequestsParser::parse(Rule::requests, input).map_err(|x| vec![x.into()])?;
     let requests = parse
         .next()

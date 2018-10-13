@@ -8,7 +8,9 @@ use std::collections::HashMap;
 #[grammar = "inventory.pest"]
 pub struct InventoryParser;
 
-pub fn parse(input: &str) -> Result<Vec<Group>, Vec<InventoryParseError>> {
+pub type InventoryParseResult = Result<Vec<Group>, Vec<InventoryParseError>>;
+
+pub fn parse(input: &str) -> InventoryParseResult {
     let mut parse = InventoryParser::parse(Rule::inventory, input).map_err(|x| vec![x.into()])?;
     let inventory = parse
         .next()
