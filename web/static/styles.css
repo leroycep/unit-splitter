@@ -1,16 +1,4 @@
 
-html,
-body {
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    min-width: 230px;
-    max-width: 900px;
-    margin: 0 auto;
-}
-
 .indent {
     margin-left: 25px;
 }
