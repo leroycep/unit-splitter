@@ -75,7 +75,27 @@ impl Component for Model {
 impl Renderable<Model> for Model {
     fn view(&self) -> Html<Self> {
         html! {
-            <div class="body",>
+            <div class="container",>
+                { self.view_header() }
+                { self.view_main() }
+                { self.view_footer() }
+            </div>
+        }
+    }
+}
+
+impl Model {
+    fn view_header(&self) -> Html<Model> {
+        html! {
+            <header>
+                { "Unit Splitter" }
+            </header>
+        }
+    }
+
+    fn view_main(&self) -> Html<Model> {
+        html! {
+            <main>
                 <div>
                     <h2>{ "Units" }</h2>
                     <textarea class="input",
@@ -93,17 +113,10 @@ impl Renderable<Model> for Model {
                     </textarea>
                 </div>
                 { self.view_output() }
-            </div>
-            <hr/>
-            <div class="footer",>
-                { PKG_NAME }{" "}<a href="changelog.html",>{"v"}{ get_version() }</a>
-                {" by "}{ AUTHORS }
-            </div>
+            </main>
         }
     }
-}
 
-impl Model {
     fn view_output(&self) -> Html<Model> {
         match &self.split {
             Ok(Split {
@@ -126,6 +139,15 @@ impl Model {
                     </div>
                 </div>
             },
+        }
+    }
+
+    fn view_footer(&self) -> Html<Model> {
+        html! {
+            <footer>
+                { PKG_NAME }{" "}<a href="changelog.html",>{"v"}{ get_version() }</a>
+                {" by "}{ AUTHORS }
+            </footer>
         }
     }
 }
