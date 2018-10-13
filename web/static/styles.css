@@ -24,6 +24,14 @@
     border: 2px solid red;
 }
 
+.inventory-result {
+    grid-row-start: 2;
+}
+
+.requests-result {
+    grid-row-start: 2;
+}
+
 /*     */
 
 body {

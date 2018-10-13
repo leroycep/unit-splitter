@@ -106,6 +106,10 @@ impl Model {
                         placeholder="enter inventory",>
                     </textarea>
                 </div>
+                <div class="inventory-result",>
+                    { format!("{:?}", self.inventory) }
+                </div>
+
                 <div>
                     <h1>{ "Requests" }</h1>
                     <textarea class="input",
@@ -114,6 +118,10 @@ impl Model {
                         placeholder="enter requests",>
                     </textarea>
                 </div>
+                <div class="requests-result",>
+                    { format!("{:?}", self.requests) }
+                </div>
+
                 <div class="output",>
                    <h1>{ "Output" }</h1>
                    { self.view_output() }
