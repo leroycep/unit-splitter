@@ -77,7 +77,9 @@ impl Renderable<Model> for Model {
         html! {
             <div class="container",>
                 { self.view_header() }
+                <nav></nav>
                 { self.view_main() }
+                <aside></aside>
                 { self.view_footer() }
             </div>
         }
