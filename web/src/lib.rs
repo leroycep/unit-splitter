@@ -75,7 +75,7 @@ impl Renderable<Model> for Model {
                     <textarea class=("indent", "requests-input"),
                         value=&self.requests_string,
                         oninput=|e| Msg::GotRequestString(e.value),
-                        placeholder="enter unit string",>
+                        placeholder="enter requests",>
                     </textarea>
                 </div>
                 { self.view_output() }
