@@ -5,7 +5,7 @@ extern crate stdweb;
 extern crate yew;
 extern crate unit_splitter_core as core;
 
-use core::group::Group;
+use core::group::{Group, Groups};
 use core::inventory::{self, InventoryParseResult};
 use core::requests::{self, RequestsParseResult};
 use core::split::{self, Split, SplitResult};
@@ -97,9 +97,9 @@ impl Model {
 
     fn view_main(&self) -> Html<Model> {
         html! {
-            <main>
+            <main class="app",>
                 <div>
-                    <h2>{ "Units" }</h2>
+                    <h1>{ "Units" }</h1>
                     <textarea class="input",
                         value=&self.inventory_string,
                         oninput=|e| Msg::GotInventoryString(e.value),
@@ -107,14 +107,17 @@ impl Model {
                     </textarea>
                 </div>
                 <div>
-                    <h2>{ "Requests" }</h2>
+                    <h1>{ "Requests" }</h1>
                     <textarea class="input",
                         value=&self.requests_string,
                         oninput=|e| Msg::GotRequestString(e.value),
                         placeholder="enter requests",>
                     </textarea>
                 </div>
-                { self.view_output() }
+                <div class="output",>
+                   <h1>{ "Output" }</h1>
+                   { self.view_output() }
+                </div>
             </main>
         }
     }
@@ -123,22 +126,16 @@ impl Model {
         match &self.split {
             Ok(Split {
                 filled_requests,
-                leftover_ranges: _,
+                leftover_ranges,
             }) => html! {
                 <div>
-                    <h2>{ "Output" }</h2>
-                    <div>
-                        <div>{ for filled_requests.iter().map(view_filled_request) }</div>
-                        <div>{ "Unused" }</div>
-                    </div>
+                    <div>{ for filled_requests.iter().map(view_filled_request) }</div>
+                    <div>{ format!("Leftover Units: {}", Groups(leftover_ranges)) }</div>
                 </div>
             },
             Err(e) => html! {
                 <div>
-                    <h2>{ "Output" }</h2>
-                    <div>
-                        { format!("{}", e) }
-                    </div>
+                    { format!("{}", e) }
                 </div>
             },
         }
@@ -147,8 +144,7 @@ impl Model {
     fn view_footer(&self) -> Html<Model> {
         html! {
             <footer>
-                { PKG_NAME }{" "}<a href="changelog.html",>{"v"}{ get_version() }</a>
-                {" by "}{ AUTHORS }
+                <a href="changelog.html",>{"v"}{ get_version() }</a>
             </footer>
         }
     }
@@ -158,7 +154,7 @@ fn view_filled_request((request_name, groups): (&String, &Vec<Group>)) -> Html<M
     html! {
         <div>
             <div>
-                { format!("{}: {}", request_name, core::group::Groups(groups)) }
+                { format!("{}: {}", request_name, Groups(groups)) }
             </div>
         </div>
     }

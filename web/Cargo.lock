@@ -382,7 +382,7 @@ dependencies = [
 
 [[package]]
 name = "unit_splitter_web"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "stdweb 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "unit-splitter-core 0.2.0",

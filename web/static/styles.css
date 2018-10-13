@@ -1,19 +1,27 @@
-
-.button {
-    padding: 0px;
-    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+.app {
+    display: flex;
+    flex-direction: column;
 }
 
-.invalid {
-    border: 2px solid red;
+@media (min-width: 768px) {
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    grid-column-gap: 1.5em;
+  }
 }
 
 .input {
     width: 100%;
 }
 
-.footer {
-    text-align: center;
+.output {
+    grid-column: span 2;
+}
+
+.invalid {
+    border: 2px solid red;
 }
 
 /*     */
@@ -53,13 +61,11 @@ main {
 }
 
 nav {
-  background-color: #f90;
   padding: 20px;
 }
  
 aside {
   padding: 20px;
-  background-color: #936;
 }
 
 footer {
@@ -67,7 +73,7 @@ footer {
   padding: 30px;
   text-align: center;
   font-size: 1.4em;
-  background-color: #690;
+  background-color: #369;
   color: white;
 }
 
