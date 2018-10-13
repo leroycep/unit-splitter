@@ -1,8 +1,4 @@
 
-.indent {
-    margin-left: 25px;
-}
-
 .button {
     padding: 0px;
     font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
@@ -12,7 +8,7 @@
     border: 2px solid red;
 }
 
-.unit-string-input {
+.input {
     width: 100%;
 }
 

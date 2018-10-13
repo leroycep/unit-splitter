@@ -77,16 +77,16 @@ impl Renderable<Model> for Model {
         html! {
             <div class="body",>
                 <div>
-                    <h1>{ "Units" }</h1>
-                    <textarea class=("indent", "inventory-input"),
+                    <h2>{ "Units" }</h2>
+                    <textarea class="input",
                         value=&self.inventory_string,
                         oninput=|e| Msg::GotInventoryString(e.value),
                         placeholder="enter inventory",>
                     </textarea>
                 </div>
                 <div>
-                    <h1>{ "Requests" }</h1>
-                    <textarea class=("indent", "requests-input"),
+                    <h2>{ "Requests" }</h2>
+                    <textarea class="input",
                         value=&self.requests_string,
                         oninput=|e| Msg::GotRequestString(e.value),
                         placeholder="enter requests",>
@@ -111,8 +111,8 @@ impl Model {
                 leftover_ranges: _,
             }) => html! {
                 <div>
-                    <h1>{ "Output" }</h1>
-                    <div class="indent",>
+                    <h2>{ "Output" }</h2>
+                    <div>
                         <div>{ for filled_requests.iter().map(view_filled_request) }</div>
                         <div>{ "Unused" }</div>
                     </div>
@@ -120,8 +120,8 @@ impl Model {
             },
             Err(e) => html! {
                 <div>
-                    <h1>{ "Output" }</h1>
-                    <div class="indent",>
+                    <h2>{ "Output" }</h2>
+                    <div>
                         { format!("{}", e) }
                     </div>
                 </div>
@@ -133,7 +133,7 @@ impl Model {
 fn view_filled_request((request_name, groups): (&String, &Vec<Group>)) -> Html<Model> {
     html! {
         <div>
-            <div class="indent",>
+            <div>
                 { format!("{}: {}", request_name, core::group::Groups(groups)) }
             </div>
         </div>
