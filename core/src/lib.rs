@@ -10,6 +10,7 @@ extern crate pest_derive;
 pub mod group;
 pub mod interval_tree;
 pub mod inventory;
+pub mod requests;
 pub mod range;
 pub mod split;
 pub mod unit_requests;

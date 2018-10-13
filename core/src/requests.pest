@@ -1,0 +1,19 @@
+// DUT Request Notation
+// ======================
+
+requests = { SOI ~ request+ ~ EOI }
+
+request = { name ~ equals ~ (repetition | number)+ ~ NEWLINE* }
+
+repetition = { number ~ times ~ number }
+
+name = @{ word ~ ((!comma ~ WHITESPACE) ~ word)* }
+word = @{ ident+ }
+number = @{ !(name ~ equals) ~ digit+ }
+
+ident = @{ !(WHITESPACE | NEWLINE | equals) ~ ANY }
+digit = @{ '0'..'9' }
+times = _{ "x" }
+equals = _{ ":" }
+comma = _{ "," }
+WHITESPACE = _{ " " | comma }
