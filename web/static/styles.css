@@ -32,6 +32,10 @@
     grid-row-start: 2;
 }
 
+pre {
+    font-family: mono;
+}
+
 /*     */
 
 body {

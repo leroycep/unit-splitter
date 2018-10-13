@@ -107,7 +107,7 @@ impl Model {
                     </textarea>
                 </div>
                 <div class="inventory-result",>
-                    <code>{{
+                    <pre>{{
                         use std::fmt::Write;
                         let mut s = String::new();
                         if let Err(ref errors) = self.inventory {
@@ -116,7 +116,7 @@ impl Model {
                             }
                         }
                         s
-                    }}</code>
+                    }}</pre>
                 </div>
 
                 <div>
@@ -128,7 +128,7 @@ impl Model {
                     </textarea>
                 </div>
                 <div class="requests-result",>
-                    <code>{{
+                    <pre>{{
                         use std::fmt::Write;
                         let mut s = String::new();
                         if let Err(ref errors) = self.requests {
@@ -137,7 +137,7 @@ impl Model {
                             }
                         }
                         s
-                    }}</code>
+                    }}</pre>
                 </div>
 
                 <div class="output",>
