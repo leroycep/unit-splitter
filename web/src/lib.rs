@@ -21,8 +21,8 @@ fn get_version() -> &'static str {
 pub struct Model {
     inventory_string: String,
     requests_string: String,
-    inventory: Option<InventoryParseResult>,
-    requests: Option<RequestsParseResult>,
+    inventory: InventoryParseResult,
+    requests: RequestsParseResult,
 }
 
 pub enum Msg {
@@ -38,8 +38,8 @@ impl Component for Model {
         Model {
             inventory_string: "".into(),
             requests_string: "".into(),
-            inventory: None,
-            requests: None,
+            inventory: inventory::parse(""),
+            requests: requests::parse(""),
         }
     }
 
@@ -47,11 +47,11 @@ impl Component for Model {
         match msg {
             Msg::GotInventoryString(value) => {
                 self.inventory_string = value;
-                self.inventory = Some(inventory::parse(&self.inventory_string));
+                self.inventory = inventory::parse(&self.inventory_string);
             }
             Msg::GotRequestString(value) => {
                 self.requests_string = value;
-                self.requests = Some(requests::parse(&self.requests_string));
+                self.requests = requests::parse(&self.requests_string);
             }
         }
         true
@@ -93,7 +93,7 @@ impl Model {
     fn view_output(&self) -> Html<Model> {
         use core::split::split;
         let (inventory, requests) = match (&self.inventory, &self.requests) {
-            (Some(Ok(i)), Some(Ok(r))) => (i, r),
+            (Ok(i), Ok(r)) => (i, r),
             _ => return html! { <div> <h1>{ "Output" }</h1> </div> },
         };
         match split(&inventory, &requests) {
