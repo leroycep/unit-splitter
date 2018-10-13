@@ -50,6 +50,23 @@ impl fmt::Display for Group {
     }
 }
 
+pub struct Groups<'a>(pub &'a [Group]);
+
+impl<'a> fmt::Display for Groups<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut need_comma = false;
+        for group in self.0 {
+            if need_comma {
+                write!(f, ", {}", group)?;
+            } else {
+                write!(f, "{}", group)?;
+                need_comma = true;
+            }
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -71,5 +88,14 @@ mod tests {
     fn format_with_name() {
         let group = Group::new("A".into(), vec![Range::new(1, 50), Range::num(61)]);
         assert_eq!(format!("{}", group), "A=1-50,61");
+    }
+
+    #[test]
+    fn format_groups() {
+        let groups = vec![
+            Group::new("A".into(), vec![Range::new(1, 50), Range::num(61)]),
+            Group::new("CTRL".into(), vec![Range::new(1, 50), Range::num(61)]),
+        ];
+        assert_eq!(format!("{}", Groups(&groups)), "A=1-50,61, CTRL=1-50,61");
     }
 }

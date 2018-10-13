@@ -5,10 +5,10 @@ extern crate stdweb;
 extern crate yew;
 extern crate unit_splitter_core as core;
 
+use core::group::Group;
 use core::inventory::{self, InventoryParseResult};
 use core::requests::{self, RequestsParseResult};
 use core::split::{self, Split, SplitResult};
-use core::group::Group;
 use yew::prelude::*;
 
 const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -128,14 +128,13 @@ impl Model {
             },
         }
     }
-
 }
 
 fn view_filled_request((request_name, groups): (&String, &Vec<Group>)) -> Html<Model> {
     html! {
         <div>
             <div class="indent",>
-                { format!("{}, {:?}", request_name, groups) }
+                { format!("{}, {}", request_name, core::group::Groups(groups)) }
             </div>
         </div>
     }

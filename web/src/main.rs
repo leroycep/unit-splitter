@@ -1,9 +1,9 @@
-extern crate yew;
 extern crate unit_splitter_web;
+extern crate yew;
 
+use unit_splitter_web::Model;
 use yew::prelude::*;
 use yew::services::console::ConsoleService;
-use unit_splitter_web::Model;
 
 pub struct Context {
     console: ConsoleService,
