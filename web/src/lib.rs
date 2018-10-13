@@ -8,6 +8,7 @@ extern crate unit_splitter_core as core;
 use core::inventory::{self, InventoryParseResult};
 use core::requests::{self, RequestsParseResult};
 use core::split::{self, Split, SplitResult};
+use core::group::Group;
 use yew::prelude::*;
 
 const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -106,13 +107,13 @@ impl Model {
     fn view_output(&self) -> Html<Model> {
         match &self.split {
             Ok(Split {
-                filled_requests: _,
+                filled_requests,
                 leftover_ranges: _,
             }) => html! {
                 <div>
                     <h1>{ "Output" }</h1>
                     <div class="indent",>
-                        <div>{ "TODO" }</div>
+                        <div>{ for filled_requests.iter().map(view_filled_request) }</div>
                         <div>{ "Unused" }</div>
                     </div>
                 </div>
@@ -126,5 +127,17 @@ impl Model {
                 </div>
             },
         }
+    }
+
+}
+
+fn view_filled_request((request_name, groups): (&String, &Vec<Group>)) -> Html<Model> {
+    html! {
+        <div>
+            <h1>{ "Output" }</h1>
+            <div class="indent",>
+                { format!("{}, {:?}", request_name, groups) }
+            </div>
+        </div>
     }
 }
