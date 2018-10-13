@@ -1,7 +1,6 @@
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
-extern crate slab;
 #[macro_use]
 extern crate pest;
 #[macro_use]
