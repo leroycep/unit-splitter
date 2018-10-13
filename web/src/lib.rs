@@ -11,9 +11,7 @@ use core::requests::{self, RequestsParseResult};
 use core::split::{self, Split, SplitResult};
 use yew::prelude::*;
 
-const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
-const AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 
 fn get_version() -> &'static str {
     VERSION.unwrap_or("unknown")
@@ -154,9 +152,9 @@ impl Model {
                 filled_requests,
                 leftover_ranges,
             }) => html! {
-                <div>
-                    <div>{ for filled_requests.iter().map(view_filled_request) }</div>
-                    <div>{ format!("Leftover Units: {}", Groups(leftover_ranges)) }</div>
+                <div class="output-grid",>
+                    { for filled_requests.iter().map(view_filled_request) }
+                    { view_filled_request(("Leftover Units", leftover_ranges)) }
                 </div>
             },
             Err(e) => html! {
@@ -176,11 +174,16 @@ impl Model {
     }
 }
 
-fn view_filled_request((request_name, groups): (&String, &Vec<Group>)) -> Html<Model> {
+fn view_filled_request<S: AsRef<str>, I: AsRef<[Group]>>(
+    (request_name, inventory): (S, I),
+) -> Html<Model> {
     html! {
-        <div>
-            <div>
-                { format!("{}: {}", request_name, Groups(groups)) }
+        <div class="output-row",>
+            <div class="output-request-name",>
+                { format!("{}", request_name.as_ref()) }
+            </div>
+            <div class="output-inventory",>
+                { format!("{}", Groups(inventory.as_ref())) }
             </div>
         </div>
     }

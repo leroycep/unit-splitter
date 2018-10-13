@@ -20,6 +20,27 @@
     grid-column: span 2;
 }
 
+.output-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-row-gap: 1em;
+    grid-column-gap: 1em;
+}
+
+.output-row {
+    display: contents;
+}
+
+.output-request-name {
+    grid-column-start: 1;
+    font-weight: bold;
+    justify-self: end;
+}
+
+.output-inventory {
+    grid-column-start: 2;
+}
+
 .invalid {
     border: 2px solid red;
 }
