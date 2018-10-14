@@ -11,6 +11,7 @@ use core::requests::{self, RequestsParseResult};
 use core::split::{self, Split, SplitResult};
 use yew::prelude::*;
 
+const AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
 fn get_version() -> &'static str {
@@ -168,6 +169,7 @@ impl Model {
     fn view_footer(&self) -> Html<Model> {
         html! {
             <footer>
+                { AUTHORS }{ " " }
                 <a href="changelog.html",>{"v"}{ get_version() }</a>
             </footer>
         }
