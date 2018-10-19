@@ -33,6 +33,7 @@ wants 17 units from `EVAL` and 2 from `CTRL`.
 
 You should something like the following in the Output section:
 
+|                    |                                         |
 | -----------------: | :-------------------------------------- |
 |              **A** | EVAL=57-58,60-67, CTRL=21-25            |
 |              **B** | EVAL=68-72,74-75,77-78,80, CTRL=26-30   |
