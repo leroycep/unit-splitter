@@ -9,10 +9,10 @@ command line interface.
 
 In the inventory field, we can put a list of units:
 
-![```
+```
 EVAL=57-58,60-72,74-75,77-78,80-93,95-97,99,101-113
 CTRL=21-40
-```](images/inventory.png)
+```
 
 These units are separated into two groups, `EVAL` and `CTRL`. Following the
 equals sign is the list of units. The units can be simple numbers separated by
