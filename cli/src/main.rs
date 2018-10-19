@@ -42,7 +42,7 @@ main!(|args: Cli| {
     println!(
         "Dividing {} units between {} requests",
         total_unit_count,
-        args.unit_requests.len()
+        requests.len()
     );
 
     let split = core::split::split(&inventory, &requests);
