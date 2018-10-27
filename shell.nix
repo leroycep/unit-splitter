@@ -2,7 +2,7 @@
 with pkgs;
 
 let
-  myrustchannel = (rustChannelOf { date = "2018-10-09"; channel = "nightly"; });
+  myrustchannel = (rustChannelOf { date = "2018-10-26"; channel = "nightly"; });
 in
 let
   myrust = (myrustchannel.rust.override {
