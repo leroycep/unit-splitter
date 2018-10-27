@@ -2,6 +2,7 @@
 name = "unit-splitter-core"
 version = "0.2.0"
 authors = ["LeRoyce Pearson <leroycepearson@geemili.xyz>"]
+edition = "2018"
 
 [dependencies]
 failure = "0.1"

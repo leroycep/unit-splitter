@@ -1,6 +1,6 @@
-use group::Group;
-use range::Range;
-use request::Request;
+use crate::group::Group;
+use crate::range::Range;
+use crate::request::Request;
 use std::collections::HashMap;
 
 pub type SplitResult = Result<Split, SplitError>;
@@ -61,8 +61,7 @@ pub struct Split {
 pub enum SplitError {
     #[fail(
         display = "There are not enough units in group {}. {} more needed",
-        group_name,
-        amount_needed
+        group_name, amount_needed
     )]
     NotEnough {
         group_name: String,

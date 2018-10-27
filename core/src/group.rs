@@ -1,4 +1,4 @@
-use range::Range;
+use crate::range::Range;
 use std::fmt;
 
 #[derive(PartialEq, Clone, Debug)]

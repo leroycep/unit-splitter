@@ -1,5 +1,5 @@
+use crate::request::Request;
 use pest::Parser;
-use request::Request;
 
 #[derive(Parser)]
 #[grammar = "requests.pest"]

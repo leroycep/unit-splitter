@@ -1,6 +1,6 @@
 // Used to learn from: https://www.geeksforgeeks.org/interval-tree/
 
-use range::Range;
+use crate::range::Range;
 
 pub struct IntervalTree<D: Clone> {
     node: Option<IntervalTreeNode<D>>,
