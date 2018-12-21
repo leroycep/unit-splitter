@@ -175,11 +175,27 @@ mod tests {
 
         let result = split(&inventory, &requests);
 
+        let mut expected_filled = HashMap::new();
+        expected_filled.insert(
+            "H".into(),
+            vec![
+                Group::new("A".into(), vec![Range::new(1, 5)]),
+            ],
+        );
+        expected_filled.insert(
+            "J".into(),
+            vec![
+                Group::new("A".into(), vec![Range::new(6, 10), Range::num(15)]),
+            ],
+        );
+
         assert_eq!(
             result,
-            Err(SplitError::NotEnough {
-                group_name: "A".into(),
-                amount_needed: 22,
+            Ok(Split {
+                filled_requests: expected_filled,
+                leftover_ranges: vec![
+                    Group::new("A".into(), vec![Range::num(18)]),
+                ],
             })
         );
     }
