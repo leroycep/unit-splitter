@@ -40,15 +40,16 @@ impl Range {
         }
     }
 
-    pub fn split(&self, amount: u32) -> (Self, Option<Self>, u32) {
-        assert!(amount != 0);
-        if amount >= self.count() {
-            (self.clone(), None, amount - self.count())
+    pub fn split(&self, amount: u32) -> (Option<Self>, Option<Self>, u32) {
+        if amount == 0 {
+            (None, Some(self.clone()), 0)
+        } else if amount >= self.count() {
+            (Some(self.clone()), None, amount - self.count())
         } else {
             let other_first = self.first + amount;
             let this_last = other_first - 1;
             (
-                Range::new(self.first, this_last),
+                Some(Range::new(self.first, this_last)),
                 Some(Range::new(other_first, self.last)),
                 0,
             )

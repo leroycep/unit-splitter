@@ -86,7 +86,9 @@ fn split_ranges(ranges: &[Range], mut amount: u32) -> Result<(Vec<Range>, Vec<Ra
         };
         let (used, unused, amount_left) = range.split(amount);
 
-        used_ranges.push(used);
+        if let Some(used) = used {
+            used_ranges.push(used);
+        }
         amount = amount_left;
         if let Some(range) = unused {
             unused_ranges.push(range);
@@ -159,6 +161,25 @@ mod tests {
                     Group::new("B".into(), vec![Range::new(197, 200)]),
                     Group::new("C".into(), vec![Range::new(297, 300)]),
                 ],
+            })
+        );
+    }
+
+    #[test]
+    fn brokeit() {
+        // A=1-10,15,18
+        // H: 5
+        // J: 6
+        let inventory = vec![Group::new("A".into(), vec![Range::new(1, 10), Range::new(15), Range::new(18)])];
+        let requests = vec![Request::new("H".into(), vec![5]), Request::new("J".into(), vec![6])];
+
+        let result = split(&inventory, &requests);
+
+        assert_eq!(
+            result,
+            Err(SplitError::NotEnough {
+                group_name: "A".into(),
+                amount_needed: 22,
             })
         );
     }
