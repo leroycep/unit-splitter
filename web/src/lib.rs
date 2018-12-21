@@ -68,7 +68,7 @@ impl draco::App for Model {
     fn render(&self) -> draco::Node<Self::Message> {
         use draco::html as h;
         h::div()
-            .attr("class", "container")
+            .class("container")
             .push(self.view_header())
             .push(h::nav())
             .push(self.view_main())
@@ -95,7 +95,7 @@ impl Model {
             }
         }
         let inventory_errs = h::div()
-            .attr("class", "inventory-result")
+            .class("inventory-result")
             .push(h::pre().push(inventory_errs_str));
 
         let mut requests_errs_str = String::new();
@@ -105,15 +105,15 @@ impl Model {
             }
         }
         let requests_errs = h::div()
-            .attr("class", "requests-result")
+            .class("requests-result")
             .push(h::pre().push(requests_errs_str));
 
         h::main()
-            .attr("class", "app")
+            .class("app")
             .push(
                 h::div().push(h::h1().push("Units")).push(
                     h::textarea()
-                        .attr("class", "input")
+                        .class("input")
                         .attr("placeholder", "enter inventory")
                         .attr("value", self.inventory_string.clone())
                         .on_input(Msg::GotInventoryString),
@@ -123,7 +123,7 @@ impl Model {
             .push(
                 h::div().push(h::h1().push("Requests")).push(
                     h::textarea()
-                        .attr("class", "input")
+                        .class("input")
                         .attr("placeholder", "enter requests")
                         .attr("value", self.requests_string.clone())
                         .on_input(Msg::GotRequestString),
@@ -140,7 +140,7 @@ impl Model {
 
     fn view_output(&self) -> draco::Node<Msg> {
         use draco::html as h;
-        let div = h::div().attr("class", "output-grid");
+        let div = h::div().class("output-grid");
         match &self.split {
             Ok(Split {
                 filled_requests,
@@ -173,15 +173,15 @@ fn view_filled_request<S: AsRef<str>, I: AsRef<[Group]>>(
 ) -> draco::Node<Msg> {
     use draco::html as h;
     h::div()
-        .attr("class", "output-row")
+        .class("output-row")
         .push(
             h::div()
-                .attr("class", "output-request-name")
+                .class("output-request-name")
                 .push(request_name.as_ref()),
         )
         .push(
             h::div()
-                .attr("class", "output-inventory")
+                .class("output-inventory")
                 .push(Groups(inventory.as_ref())),
         )
         .into()
