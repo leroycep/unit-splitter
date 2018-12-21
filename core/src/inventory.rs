@@ -208,9 +208,9 @@ fn parse_ranges_from_rules(pair: ::pest::iterators::Pair<Rule>) -> Result<Range,
 
 #[cfg(test)]
 mod tests {
-    use group::Group;
-    use inventory::{parse, InventoryParseError, InventoryParser, OwnedSpan, Rule};
-    use range::Range;
+    use crate::group::Group;
+    use crate::inventory::{parse, InventoryParseError, InventoryParser, OwnedSpan, Rule};
+    use crate::range::Range;
 
     #[test]
     fn one_group() {

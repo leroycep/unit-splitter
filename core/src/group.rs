@@ -70,7 +70,7 @@ impl<'a> fmt::Display for Groups<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use range::Range;
+    use crate::range::Range;
 
     #[test]
     fn it_works() {

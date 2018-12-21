@@ -105,10 +105,10 @@ fn split_ranges(ranges: &[Range], mut amount: u32) -> Result<(Vec<Range>, Vec<Ra
 
 #[cfg(test)]
 mod tests {
-    use group::Group;
-    use range::Range;
-    use request::Request;
-    use split::{split, Split, SplitError};
+    use crate::group::Group;
+    use crate::range::Range;
+    use crate::request::Request;
+    use crate::split::{split, Split, SplitError};
     use std::collections::HashMap;
 
     #[test]
@@ -170,7 +170,7 @@ mod tests {
         // A=1-10,15,18
         // H: 5
         // J: 6
-        let inventory = vec![Group::new("A".into(), vec![Range::new(1, 10), Range::new(15), Range::new(18)])];
+        let inventory = vec![Group::new("A".into(), vec![Range::new(1, 10), Range::num(15), Range::num(18)])];
         let requests = vec![Request::new("H".into(), vec![5]), Request::new("J".into(), vec![6])];
 
         let result = split(&inventory, &requests);

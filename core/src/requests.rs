@@ -64,8 +64,8 @@ impl From<::pest::error::Error<Rule>> for RequestsParseError {
 
 #[cfg(test)]
 mod tests {
-    use request::Request;
-    use requests::{parse, RequestsParser, Rule};
+    use crate::request::Request;
+    use crate::requests::{parse, RequestsParser, Rule};
 
     #[test]
     fn my_one_request() {

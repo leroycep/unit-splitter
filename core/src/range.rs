@@ -92,7 +92,7 @@ mod tests {
         let range = Range::new(1, 10);
         assert_eq!(
             range.split(5),
-            (Range::new(1, 5), Some(Range::new(6, 10)), 0)
+            (Some(Range::new(1, 5)), Some(Range::new(6, 10)), 0)
         );
     }
 
