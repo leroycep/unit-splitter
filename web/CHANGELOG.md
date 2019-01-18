@@ -5,6 +5,15 @@ All notable changes to the [Unit Splitter][unit-splitter] project will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.1 - 2019-01-17
+### Changed
+- Switched to the `draco` library for webpage
+- Updated to Rust 2018 edition
+- Updated to Rust 1.32
+
+### Fixed
+- Fixed bug where taking the exact number of units caused application to panic
+
 ## 0.2.0 - 2018-10-13
 ### Added
 - Requests text input
