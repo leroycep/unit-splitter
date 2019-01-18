@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated to Rust 1.32
 
 ### Fixed
-- Fixed bug where taking the exact number of units caused application to panic
+- Fixed bug where requesting the exact number of units in a range caused the
+  application to panic
 
 ## 0.2.0 - 2018-10-13
 ### Added

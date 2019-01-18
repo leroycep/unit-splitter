@@ -412,7 +412,7 @@ dependencies = [
 
 [[package]]
 name = "unit_splitter_web"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "draco 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "unit-splitter-core 0.2.0",
