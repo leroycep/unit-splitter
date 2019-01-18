@@ -91,7 +91,7 @@ impl Model {
         let mut inventory_errs_str = String::new();
         if let Err(ref errors) = self.inventory {
             for e in errors {
-                writeln!(inventory_errs_str, "{}", e);
+                let _ = writeln!(inventory_errs_str, "{}", e);
             }
         }
         let inventory_errs = h::div()
@@ -101,7 +101,7 @@ impl Model {
         let mut requests_errs_str = String::new();
         if let Err(ref errors) = self.requests {
             for e in errors {
-                writeln!(requests_errs_str, "{}", e);
+                let _ = writeln!(requests_errs_str, "{}", e);
             }
         }
         let requests_errs = h::div()
@@ -111,7 +111,7 @@ impl Model {
         h::main()
             .class("app")
             .push(
-                h::div().push(h::h1().push("Units")).push(
+                h::div().class("inventory-input").push(h::h1().push("Units")).push(
                     h::textarea()
                         .class("input")
                         .attr("placeholder", "enter inventory")
@@ -121,7 +121,7 @@ impl Model {
             )
             .push(inventory_errs)
             .push(
-                h::div().push(h::h1().push("Requests")).push(
+                h::div().class("requests-input").push(h::h1().push("Requests")).push(
                     h::textarea()
                         .class("input")
                         .attr("placeholder", "enter requests")
@@ -132,6 +132,7 @@ impl Model {
             .push(requests_errs)
             .push(
                 h::div()
+                    .class("output")
                     .push(h::h1().push("Output"))
                     .push(self.view_output()),
             )
