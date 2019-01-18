@@ -8,6 +8,6 @@ edition = "2018"
 lto = true
 
 [dependencies]
-draco = { path = "../../../tmp/draco" }
-wasm-bindgen = "0.2.25"
+draco = "0.1.2"
+wasm-bindgen = "0.2.32"
 unit-splitter-core = { path = "../core" }
