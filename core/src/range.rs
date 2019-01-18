@@ -34,9 +34,9 @@ impl Range {
     pub fn write_to_string(&self, string: &mut String) {
         use std::fmt::Write;
         if self.first == self.last {
-            write!(string, "{}", self.first);
+            let _ = write!(string, "{}", self.first);
         } else {
-            write!(string, "{}-{}", self.first, self.last);
+            let _ = write!(string, "{}-{}", self.first, self.last);
         }
     }
 

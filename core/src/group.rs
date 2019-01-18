@@ -40,7 +40,7 @@ impl fmt::Display for Group {
         let mut need_comma = false;
         for range in &self.ranges {
             if need_comma {
-                write!(f, ",{}", range)?;
+                write!(f, ", {}", range)?;
             } else {
                 write!(f, "{}", range)?;
                 need_comma = true;
