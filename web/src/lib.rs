@@ -1,16 +1,9 @@
-#![recursion_limit = "1024"]
+use unit_splitter_core::group::{Group, Groups};
+use unit_splitter_core::inventory::{self, InventoryParseResult};
+use unit_splitter_core::requests::{self, RequestsParseResult};
+use unit_splitter_core::split::{self, Split, SplitResult};
 
-extern crate stdweb;
-#[macro_use]
-extern crate yew;
-extern crate unit_splitter_core as core;
-
-use core::group::{Group, Groups};
-use core::inventory::{self, InventoryParseResult};
-use core::requests::{self, RequestsParseResult};
-use core::split::{self, Split, SplitResult};
-use yew::prelude::*;
-
+const TITLE: &'static str = "Unit Splitter";
 const AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
 
@@ -26,35 +19,38 @@ pub struct Model {
     split: SplitResult,
 }
 
+#[derive(Debug)]
 pub enum Msg {
     GotInventoryString(String),
     GotRequestString(String),
 }
 
-impl Component for Model {
-    type Message = Msg;
-    type Properties = ();
-
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
+impl Default for Model {
+    fn default() -> Self {
         Model {
             inventory_string: "".into(),
             requests_string: "".into(),
             inventory: inventory::parse(""),
             requests: requests::parse(""),
-            split: Ok(core::split::Split {
+            split: Ok(unit_splitter_core::split::Split {
                 filled_requests: std::collections::HashMap::new(),
                 leftover_ranges: Vec::new(),
             }),
         }
     }
+}
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+impl draco::App for Model {
+    type Message = Msg;
+
+    fn update(&mut self, _: &draco::Mailbox<Self::Message>, msg: Self::Message) {
+        use crate::Msg::*;
         match msg {
-            Msg::GotInventoryString(value) => {
+            GotInventoryString(value) => {
                 self.inventory_string = value;
                 self.inventory = inventory::parse(&self.inventory_string);
             }
-            Msg::GotRequestString(value) => {
+            GotRequestString(value) => {
                 self.requests_string = value;
                 self.requests = requests::parse(&self.requests_string);
             }
@@ -67,126 +63,127 @@ impl Component for Model {
                 // TODO: Make it apparent when output and input are desynchronized?
             }
         };
-        true
     }
-}
 
-impl Renderable<Model> for Model {
-    fn view(&self) -> Html<Self> {
-        html! {
-            <div class="container",>
-                { self.view_header() }
-                <nav></nav>
-                { self.view_main() }
-                <aside></aside>
-                { self.view_footer() }
-            </div>
-        }
+    fn render(&self) -> draco::Node<Self::Message> {
+        use draco::html as h;
+        h::div()
+            .class("container")
+            .push(self.view_header())
+            .push(h::nav())
+            .push(self.view_main())
+            .push(h::aside())
+            .push(self.view_footer())
+            .into()
     }
 }
 
 impl Model {
-    fn view_header(&self) -> Html<Model> {
-        html! {
-            <header>
-                { "Unit Splitter" }
-            </header>
-        }
+    fn view_header(&self) -> draco::Node<Msg> {
+        use draco::html as h;
+        h::header().push(TITLE).into()
     }
 
-    fn view_main(&self) -> Html<Model> {
-        html! {
-            <main class="app",>
-                <div>
-                    <h1>{ "Units" }</h1>
-                    <textarea class="input",
-                        value=&self.inventory_string,
-                        oninput=|e| Msg::GotInventoryString(e.value),
-                        placeholder="enter inventory",>
-                    </textarea>
-                </div>
-                <div class="inventory-result",>
-                    <pre>{{
-                        use std::fmt::Write;
-                        let mut s = String::new();
-                        if let Err(ref errors) = self.inventory {
-                            for e in errors {
-                                writeln!(s, "{}", e);
-                            }
-                        }
-                        s
-                    }}</pre>
-                </div>
+    fn view_main(&self) -> draco::Node<Msg> {
+        use draco::html as h;
+        use std::fmt::Write;
 
-                <div>
-                    <h1>{ "Requests" }</h1>
-                    <textarea class="input",
-                        value=&self.requests_string,
-                        oninput=|e| Msg::GotRequestString(e.value),
-                        placeholder="enter requests",>
-                    </textarea>
-                </div>
-                <div class="requests-result",>
-                    <pre>{{
-                        use std::fmt::Write;
-                        let mut s = String::new();
-                        if let Err(ref errors) = self.requests {
-                            for e in errors {
-                                writeln!(s, "{}", e);
-                            }
-                        }
-                        s
-                    }}</pre>
-                </div>
-
-                <div class="output",>
-                   <h1>{ "Output" }</h1>
-                   { self.view_output() }
-                </div>
-            </main>
+        let mut inventory_errs_str = String::new();
+        if let Err(ref errors) = self.inventory {
+            for e in errors {
+                let _ = writeln!(inventory_errs_str, "{}", e);
+            }
         }
+        let inventory_errs = h::div()
+            .class("inventory-result")
+            .push(h::pre().push(inventory_errs_str));
+
+        let mut requests_errs_str = String::new();
+        if let Err(ref errors) = self.requests {
+            for e in errors {
+                let _ = writeln!(requests_errs_str, "{}", e);
+            }
+        }
+        let requests_errs = h::div()
+            .class("requests-result")
+            .push(h::pre().push(requests_errs_str));
+
+        h::main()
+            .class("app")
+            .push(
+                h::div().class("inventory-input").push(h::h1().push("Units")).push(
+                    h::textarea()
+                        .class("input")
+                        .attr("placeholder", "enter inventory")
+                        .attr("value", self.inventory_string.clone())
+                        .on_input(Msg::GotInventoryString),
+                ),
+            )
+            .push(inventory_errs)
+            .push(
+                h::div().class("requests-input").push(h::h1().push("Requests")).push(
+                    h::textarea()
+                        .class("input")
+                        .attr("placeholder", "enter requests")
+                        .attr("value", self.requests_string.clone())
+                        .on_input(Msg::GotRequestString),
+                ),
+            )
+            .push(requests_errs)
+            .push(
+                h::div()
+                    .class("output")
+                    .push(h::h1().push("Output"))
+                    .push(self.view_output()),
+            )
+            .into()
     }
 
-    fn view_output(&self) -> Html<Model> {
+    fn view_output(&self) -> draco::Node<Msg> {
+        use draco::html as h;
+        let div = h::div().class("output-grid");
         match &self.split {
             Ok(Split {
                 filled_requests,
                 leftover_ranges,
-            }) => html! {
-                <div class="output-grid",>
-                    { for filled_requests.iter().map(view_filled_request) }
-                    { view_filled_request(("Leftover Units", leftover_ranges)) }
-                </div>
-            },
-            Err(e) => html! {
-                <div>
-                    { format!("{}", e) }
-                </div>
-            },
+            }) => div
+                .append(filled_requests.iter().map(view_filled_request))
+                .push(view_filled_request(("Leftover Units", leftover_ranges)))
+                .into(),
+            Err(e) => div.push(format!("{}", e)).into(),
         }
     }
 
-    fn view_footer(&self) -> Html<Model> {
-        html! {
-            <footer>
-                { AUTHORS }{ " " }
-                <a href="changelog.html",>{"v"}{ get_version() }</a>
-            </footer>
-        }
+    fn view_footer(&self) -> draco::Node<Msg> {
+        use draco::html as h;
+        h::footer()
+            .push(AUTHORS)
+            .push(" ")
+            .push(
+                h::a()
+                    .attr("href", "changelog.html")
+                    .push("v")
+                    .push(get_version()),
+            )
+            .into()
     }
 }
 
 fn view_filled_request<S: AsRef<str>, I: AsRef<[Group]>>(
     (request_name, inventory): (S, I),
-) -> Html<Model> {
-    html! {
-        <div class="output-row",>
-            <div class="output-request-name",>
-                { format!("{}", request_name.as_ref()) }
-            </div>
-            <div class="output-inventory",>
-                { format!("{}", Groups(inventory.as_ref())) }
-            </div>
-        </div>
-    }
+) -> draco::Node<Msg> {
+    use draco::html as h;
+    h::div()
+        .class("output-row")
+        .push(
+            h::div()
+                .class("output-request-name")
+                .push(request_name.as_ref()),
+        )
+        .push(
+            h::div()
+                .class("output-inventory")
+                .push(Groups(inventory.as_ref())),
+        )
+        .into()
 }

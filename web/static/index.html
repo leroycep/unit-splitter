@@ -8,7 +8,9 @@
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <script src="js/app.js"></script>
+        <div id="unit-splitter-root"></div>
+        <script src="./unit_splitter_web.js"></script>
+        <script>UnitSplitter('./unit_splitter_web_bg.wasm').then(() => UnitSplitter.start());</script>
     </body>
 </html>
 

@@ -9,6 +9,10 @@
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr 2fr;
     grid-column-gap: 1.5em;
+    grid-template-areas:
+        "inventory requests"
+        "dbg_inv dbg_reqs"
+        "out out";
   }
 }
 
@@ -17,7 +21,7 @@
 }
 
 .output {
-    grid-column: span 2;
+    grid-area: out;
 }
 
 .output-grid {
@@ -45,12 +49,20 @@
     border: 2px solid red;
 }
 
+.inventory-input {
+    grid-area: inventory;
+}
+
+.requests-input {
+    grid-area: requests;
+}
+
 .inventory-result {
-    grid-row-start: 2;
+    grid-area: dbg_inv;
 }
 
 .requests-result {
-    grid-row-start: 2;
+    grid-area: dbg_reqs;
 }
 
 pre {

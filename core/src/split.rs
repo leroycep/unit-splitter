@@ -1,6 +1,6 @@
-use group::Group;
-use range::Range;
-use request::Request;
+use crate::group::Group;
+use crate::range::Range;
+use crate::request::Request;
 use std::collections::HashMap;
 
 pub type SplitResult = Result<Split, SplitError>;
@@ -61,8 +61,7 @@ pub struct Split {
 pub enum SplitError {
     #[fail(
         display = "There are not enough units in group {}. {} more needed",
-        group_name,
-        amount_needed
+        group_name, amount_needed
     )]
     NotEnough {
         group_name: String,
@@ -87,7 +86,9 @@ fn split_ranges(ranges: &[Range], mut amount: u32) -> Result<(Vec<Range>, Vec<Ra
         };
         let (used, unused, amount_left) = range.split(amount);
 
-        used_ranges.push(used);
+        if let Some(used) = used {
+            used_ranges.push(used);
+        }
         amount = amount_left;
         if let Some(range) = unused {
             unused_ranges.push(range);
@@ -104,10 +105,10 @@ fn split_ranges(ranges: &[Range], mut amount: u32) -> Result<(Vec<Range>, Vec<Ra
 
 #[cfg(test)]
 mod tests {
-    use group::Group;
-    use range::Range;
-    use request::Request;
-    use split::{split, Split, SplitError};
+    use crate::group::Group;
+    use crate::range::Range;
+    use crate::request::Request;
+    use crate::split::{split, Split, SplitError};
     use std::collections::HashMap;
 
     #[test]
@@ -159,6 +160,41 @@ mod tests {
                     Group::new("A".into(), vec![Range::new(97, 100)]),
                     Group::new("B".into(), vec![Range::new(197, 200)]),
                     Group::new("C".into(), vec![Range::new(297, 300)]),
+                ],
+            })
+        );
+    }
+
+    #[test]
+    fn brokeit() {
+        // A=1-10,15,18
+        // H: 5
+        // J: 6
+        let inventory = vec![Group::new("A".into(), vec![Range::new(1, 10), Range::num(15), Range::num(18)])];
+        let requests = vec![Request::new("H".into(), vec![5]), Request::new("J".into(), vec![6])];
+
+        let result = split(&inventory, &requests);
+
+        let mut expected_filled = HashMap::new();
+        expected_filled.insert(
+            "H".into(),
+            vec![
+                Group::new("A".into(), vec![Range::new(1, 5)]),
+            ],
+        );
+        expected_filled.insert(
+            "J".into(),
+            vec![
+                Group::new("A".into(), vec![Range::new(6, 10), Range::num(15)]),
+            ],
+        );
+
+        assert_eq!(
+            result,
+            Ok(Split {
+                filled_requests: expected_filled,
+                leftover_ranges: vec![
+                    Group::new("A".into(), vec![Range::num(18)]),
                 ],
             })
         );

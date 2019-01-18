@@ -1,7 +1,7 @@
-use group::Group;
-use interval_tree::IntervalTree;
+use crate::group::Group;
+use crate::interval_tree::IntervalTree;
+use crate::range::Range;
 use pest::Parser;
-use range::Range;
 use std::collections::HashMap;
 
 #[derive(Parser)]
@@ -108,8 +108,7 @@ pub enum InventoryParseError {
 
     #[fail(
         display = "Duplicate group name: group at {:?} has the same name as group at {:?}",
-        duplicate,
-        first
+        duplicate, first
     )]
     DuplicateGroup {
         first: OwnedSpan,
@@ -118,8 +117,7 @@ pub enum InventoryParseError {
 
     #[fail(
         display = "Overlapping unit numbers: {:?} overlaps with {:?}",
-        overlap,
-        first
+        overlap, first
     )]
     OverlappingRange {
         first: OwnedSpan,
@@ -210,9 +208,9 @@ fn parse_ranges_from_rules(pair: ::pest::iterators::Pair<Rule>) -> Result<Range,
 
 #[cfg(test)]
 mod tests {
-    use group::Group;
-    use inventory::{parse, InventoryParseError, InventoryParser, OwnedSpan, Rule};
-    use range::Range;
+    use crate::group::Group;
+    use crate::inventory::{parse, InventoryParseError, InventoryParser, OwnedSpan, Rule};
+    use crate::range::Range;
 
     #[test]
     fn one_group() {

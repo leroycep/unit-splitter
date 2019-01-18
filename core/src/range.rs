@@ -34,21 +34,22 @@ impl Range {
     pub fn write_to_string(&self, string: &mut String) {
         use std::fmt::Write;
         if self.first == self.last {
-            write!(string, "{}", self.first);
+            let _ = write!(string, "{}", self.first);
         } else {
-            write!(string, "{}-{}", self.first, self.last);
+            let _ = write!(string, "{}-{}", self.first, self.last);
         }
     }
 
-    pub fn split(&self, amount: u32) -> (Self, Option<Self>, u32) {
-        assert!(amount != 0);
-        if amount >= self.count() {
-            (self.clone(), None, amount - self.count())
+    pub fn split(&self, amount: u32) -> (Option<Self>, Option<Self>, u32) {
+        if amount == 0 {
+            (None, Some(self.clone()), 0)
+        } else if amount >= self.count() {
+            (Some(self.clone()), None, amount - self.count())
         } else {
             let other_first = self.first + amount;
             let this_last = other_first - 1;
             (
-                Range::new(self.first, this_last),
+                Some(Range::new(self.first, this_last)),
                 Some(Range::new(other_first, self.last)),
                 0,
             )
@@ -91,7 +92,7 @@ mod tests {
         let range = Range::new(1, 10);
         assert_eq!(
             range.split(5),
-            (Range::new(1, 5), Some(Range::new(6, 10)), 0)
+            (Some(Range::new(1, 5)), Some(Range::new(6, 10)), 0)
         );
     }
 

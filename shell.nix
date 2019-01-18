@@ -2,10 +2,7 @@
 with pkgs;
 
 let
-  myrustchannel = (rustChannelOf { date = "2018-10-26"; channel = "nightly"; });
-in
-let
-  myrust = (myrustchannel.rust.override {
+  myrust = (rustChannels.stable.rust.override {
     extensions = [ "rust-std" ];
     targets = [
         "wasm32-unknown-unknown"
@@ -20,5 +17,6 @@ in
       pkgconfig
       openssl
       gcc
+      libstdcxx5
     ];
   }
