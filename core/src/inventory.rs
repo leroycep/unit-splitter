@@ -44,31 +44,30 @@ pub fn parse(input: &str) -> InventoryParseResult {
                         group_spans.insert(name.clone(), first.as_span());
                     }
                 } else {
+                    // Default to an empty name if no name is given for the group
                     name = String::new();
-                    match parse_ranges_from_rules(first.clone()) {
+
+                    // Since we can't put `first` back onto the iterator, we'll have
+                    // to go ahead and parse the range here instead of in the main
+                    // loop.
+                    //
+                    // We don't if it is indeed a range, because `inventory.pest`
+                    // ensures that if this isn't a name, it's a range.
+                    match parse_ranges_from_rules(&first, &mut errors) {
                         Ok(range) => {
                             interval_tree.insert(range.clone(), first.as_span());
                             ranges.push(range);
                         }
-                        Err(()) => {
-                            errors.push(InventoryParseError::DecreasingRange {
-                                range: (&first.as_span()).into(),
-                            });
-                            continue;
-                        }
+                        Err(()) => continue,
                     };
                 }
 
+                // Read all the ranges in
                 for pair in inner {
-                    let range = parse_ranges_from_rules(pair.clone());
-                    let range = match range {
+                    // The next rules can only be ranges
+                    let range = match parse_ranges_from_rules(&pair, &mut errors) {
                         Ok(r) => r,
-                        Err(()) => {
-                            errors.push(InventoryParseError::DecreasingRange {
-                                range: (&pair.as_span()).into(),
-                            });
-                            continue;
-                        }
+                        Err(()) => continue,
                     };
 
                     // Test to make sure that no unit numbers have been duplicated.
@@ -80,6 +79,8 @@ pub fn parse(input: &str) -> InventoryParseResult {
                             overlap: (&pair.as_span()).into(),
                         };
                         errors.push(err);
+                        // We don't `continue` here so that all numbers that have
+                        // been duplicated can be caught at once.
                     }
 
                     interval_tree.insert(range.clone(), pair.as_span());
@@ -126,6 +127,9 @@ pub enum InventoryParseError {
 
     #[fail(display = "Range goes from high to low: {:?}", range)]
     DecreasingRange { range: OwnedSpan },
+
+    #[fail(display = "Number is too large to parse: {:?}", number)]
+    NumberTooLarge { number: OwnedSpan },
 }
 
 impl From<::pest::error::Error<Rule>> for InventoryParseError {
@@ -163,8 +167,8 @@ impl OwnedSpan {
     }
 }
 
-impl<'i, 'a> From<&'a ::pest::Span<'i>> for OwnedSpan {
-    fn from(span: &'a ::pest::Span) -> Self {
+impl From<&'_ ::pest::Span<'_>> for OwnedSpan {
+    fn from(span: &'_ ::pest::Span) -> Self {
         Self {
             text: span.as_str().into(),
             start: span.start(),
@@ -174,35 +178,54 @@ impl<'i, 'a> From<&'a ::pest::Span<'i>> for OwnedSpan {
 }
 
 /// Parses a Pair that is of `Rule::range` or `Rule::number` into a Range, or returns
-/// an error if Range decreases in value..
-fn parse_ranges_from_rules(pair: ::pest::iterators::Pair<Rule>) -> Result<Range, ()> {
+/// an error if Range decreases in value or is larger than the maximum size of a u32.
+/// Errors are appended to `errors`, and any error will cause `Err` to be returned.
+fn parse_ranges_from_rules(
+    pair: &::pest::iterators::Pair<Rule>,
+    errors: &mut Vec<InventoryParseError>,
+) -> Result<Range, ()> {
     match pair.as_rule() {
         Rule::number => {
-            Ok(Range::num(pair.as_str().parse().expect(
-                "The number rule should be parseable by rust number parser",
-            )))
+            let num = parse_number_from_pair(pair, errors)?;
+            return Ok(Range::num(num));
         }
         Rule::range => {
-            let mut inner = pair.into_inner();
-            let first = inner
-                .next()
-                .expect("Rule::range must have two numbers")
-                .as_str()
-                .parse()
-                .expect("Number rule should be parseable by rust number parser");
-            let last = inner
-                .next()
-                .expect("Rule::range must have two numbers")
-                .as_str()
-                .parse()
-                .expect("Number rule should be parseable by rust number parser");
-            if first > last {
-                Err(())
-            } else {
-                Ok(Range::new(first, last))
+            let mut inner = pair.clone().into_inner();
+            let first_pair = inner.next().expect("Rule::range must have two numbers");
+            let last_pair = inner.next().expect("Rule::range must have two numbers");
+
+            let first_res = parse_number_from_pair(&first_pair, errors);
+            let last_res = parse_number_from_pair(&last_pair, errors);
+
+            match (first_res, last_res) {
+                (Ok(first), Ok(last)) if first <= last => return Ok(Range::new(first, last)),
+                _ => {
+                    errors.push(InventoryParseError::DecreasingRange {
+                        range: (&pair.as_span()).into(),
+                    });
+                }
             }
         }
         _ => unreachable!(),
+    }
+    Err(())
+}
+
+/// Parses a pair as a number. This should only be called on pairs you know to be a number!
+/// Any parsing error is attributed to the number being to large to fit in a u32, as all other
+/// errors should be impossible after the `inventory.pest` parser has confirmed it.
+fn parse_number_from_pair(
+    pair: &::pest::iterators::Pair<Rule>,
+    errors: &mut Vec<InventoryParseError>,
+) -> Result<u32, ()> {
+    match pair.as_str().parse() {
+        Ok(num) => Ok(num),
+        Err(_) => {
+            errors.push(InventoryParseError::NumberTooLarge {
+                number: (&pair.as_span()).into(),
+            });
+            Err(())
+        }
     }
 }
 
