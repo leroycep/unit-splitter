@@ -21,7 +21,7 @@ echo '
         <main>
 ' >> $OUT
 
-comrak CHANGELOG.md >> $OUT
+comrak ../CHANGELOG.md >> $OUT
 
 echo '
         </main>
