@@ -167,7 +167,10 @@ impl From<&'_ ::pest::Span<'_>> for OwnedSpan {
 
 /// Parses a Pair that is of `Rule::range` or `Rule::number` into a Range, or returns
 /// an error if Range decreases in value..
-fn parse_ranges_from_rules(pair: &::pest::iterators::Pair<Rule>, errors: &mut Vec<InventoryParseError>) -> Result<Range, ()> {
+fn parse_ranges_from_rules(
+    pair: &::pest::iterators::Pair<Rule>,
+    errors: &mut Vec<InventoryParseError>,
+) -> Result<Range, ()> {
     match pair.as_rule() {
         Rule::number => {
             let num = parse_number_from_pair(pair, errors)?;
@@ -175,12 +178,8 @@ fn parse_ranges_from_rules(pair: &::pest::iterators::Pair<Rule>, errors: &mut Ve
         }
         Rule::range => {
             let mut inner = pair.clone().into_inner();
-            let first_pair = inner
-                .next()
-                .expect("Rule::range must have two numbers");
-            let last_pair = inner
-                .next()
-                .expect("Rule::range must have two numbers");
+            let first_pair = inner.next().expect("Rule::range must have two numbers");
+            let last_pair = inner.next().expect("Rule::range must have two numbers");
 
             let first_res = parse_number_from_pair(&first_pair, errors);
             let last_res = parse_number_from_pair(&last_pair, errors);
@@ -199,7 +198,10 @@ fn parse_ranges_from_rules(pair: &::pest::iterators::Pair<Rule>, errors: &mut Ve
     Err(())
 }
 
-fn parse_number_from_pair(pair: &::pest::iterators::Pair<Rule>, errors: &mut Vec<InventoryParseError>) -> Result<u32, ()> {
+fn parse_number_from_pair(
+    pair: &::pest::iterators::Pair<Rule>,
+    errors: &mut Vec<InventoryParseError>,
+) -> Result<u32, ()> {
     match pair.as_str().parse() {
         Ok(num) => Ok(num),
         Err(_) => {
