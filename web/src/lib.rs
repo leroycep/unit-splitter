@@ -33,7 +33,7 @@ impl Default for Model {
             inventory: inventory::parse(""),
             requests: requests::parse(""),
             split: Ok(unit_splitter_core::split::Split {
-                filled_requests: std::collections::HashMap::new(),
+                filled_requests: Vec::new(),
                 leftover_ranges: Vec::new(),
             }),
         }
@@ -148,7 +148,7 @@ impl Model {
                 leftover_ranges,
             }) => div
                 .append(filled_requests.iter().map(view_filled_request))
-                .push(view_filled_request(("Leftover Units", leftover_ranges)))
+                .push(view_filled_request(&("Leftover Units", leftover_ranges)))
                 .into(),
             Err(e) => div.push(format!("{}", e)).into(),
         }
@@ -170,7 +170,7 @@ impl Model {
 }
 
 fn view_filled_request<S: AsRef<str>, I: AsRef<[Group]>>(
-    (request_name, inventory): (S, I),
+    (request_name, inventory): &(S, I),
 ) -> draco::Node<Msg> {
     use draco::html as h;
     h::div()

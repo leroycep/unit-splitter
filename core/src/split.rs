@@ -1,13 +1,12 @@
 use crate::group::Group;
 use crate::range::Range;
 use crate::request::Request;
-use std::collections::HashMap;
 
 pub type SplitResult = Result<Split, SplitError>;
 
 pub fn split(inventory: &[Group], requests: &[Request]) -> SplitResult {
     let mut inventory = inventory.to_vec();
-    let mut filled_requests = HashMap::new();
+    let mut filled_requests = Vec::new();
     for request in requests {
         let mut groups_used_ranges = vec![];
         for (group_idx, amount) in request.amounts().iter().enumerate() {
@@ -43,7 +42,7 @@ pub fn split(inventory: &[Group], requests: &[Request]) -> SplitResult {
             };
             *group = group.with_ranges(unused);
         }
-        filled_requests.insert(request.name().into(), groups_used_ranges);
+        filled_requests.push((request.name().into(), groups_used_ranges));
     }
     return Ok(Split {
         filled_requests: filled_requests,
@@ -53,7 +52,7 @@ pub fn split(inventory: &[Group], requests: &[Request]) -> SplitResult {
 
 #[derive(Debug, PartialEq)]
 pub struct Split {
-    pub filled_requests: HashMap<String, Vec<Group>>,
+    pub filled_requests: Vec<(String, Vec<Group>)>,
     pub leftover_ranges: Vec<Group>,
 }
 
