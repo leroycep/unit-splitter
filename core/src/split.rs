@@ -108,7 +108,6 @@ mod tests {
     use crate::range::Range;
     use crate::request::Request;
     use crate::split::{split, Split, SplitError};
-    use std::collections::HashMap;
 
     #[test]
     fn simple() {
@@ -125,31 +124,31 @@ mod tests {
 
         let result = split(&inventory, &requests);
 
-        let mut expected_filled = HashMap::new();
-        expected_filled.insert(
+        let mut expected_filled = Vec::new();
+        expected_filled.push((
             "X".into(),
             vec![
                 Group::new("A".into(), vec![Range::new(1, 32)]),
                 Group::new("B".into(), vec![Range::new(101, 132)]),
                 Group::new("C".into(), vec![Range::new(201, 232)]),
             ],
-        );
-        expected_filled.insert(
+        ));
+        expected_filled.push((
             "Y".into(),
             vec![
                 Group::new("A".into(), vec![Range::new(33, 64)]),
                 Group::new("B".into(), vec![Range::new(133, 164)]),
                 Group::new("C".into(), vec![Range::new(233, 264)]),
             ],
-        );
-        expected_filled.insert(
+        ));
+        expected_filled.push((
             "Z".into(),
             vec![
                 Group::new("A".into(), vec![Range::new(65, 96)]),
                 Group::new("B".into(), vec![Range::new(165, 196)]),
                 Group::new("C".into(), vec![Range::new(265, 296)]),
             ],
-        );
+        ));
 
         assert_eq!(
             result,
@@ -174,19 +173,19 @@ mod tests {
 
         let result = split(&inventory, &requests);
 
-        let mut expected_filled = HashMap::new();
-        expected_filled.insert(
+        let mut expected_filled = Vec::new();
+        expected_filled.push((
             "H".into(),
             vec![
                 Group::new("A".into(), vec![Range::new(1, 5)]),
             ],
-        );
-        expected_filled.insert(
+        ));
+        expected_filled.push((
             "J".into(),
             vec![
                 Group::new("A".into(), vec![Range::new(6, 10), Range::num(15)]),
             ],
-        );
+        ));
 
         assert_eq!(
             result,
