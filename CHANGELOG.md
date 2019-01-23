@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - [core] Entering a large integer will no longer cause the application to panic
+- [core] The split units are now displayed in the order of input requests
+- [web] Fix layout growing larger than necessary for large outputs
 
 ## [0.2.1] - 2019-01-17
 ### Changed
