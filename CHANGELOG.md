@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [unit-splitter]: https://utils.geemili.xyz/unit-splitter
 
-## [Unreleased]
+## [0.2.2] - 2019-01-22
 ### Fixed
 - [core] Entering a large integer will no longer cause the application to panic
 - [core] The split units are now displayed in the order of input requests

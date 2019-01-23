@@ -18,7 +18,14 @@
 <p>All notable changes to the <a href="https://utils.geemili.xyz/unit-splitter">Unit Splitter</a> project will be documented in this file.</p>
 <p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>
 and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
-<h2>0.2.1 - 2019-01-17</h2>
+<h2>[0.2.2] - 2019-01-22</h2>
+<h3>Fixed</h3>
+<ul>
+<li>[core] Entering a large integer will no longer cause the application to panic</li>
+<li>[core] The split units are now displayed in the order of input requests</li>
+<li>[web] Fix layout growing larger than necessary for large outputs</li>
+</ul>
+<h2>[0.2.1] - 2019-01-17</h2>
 <h3>Changed</h3>
 <ul>
 <li>Switched to the <code>draco</code> library for webpage</li>
@@ -27,30 +34,30 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 </ul>
 <h3>Fixed</h3>
 <ul>
-<li>Fixed bug where requesting the exact number of units in a range caused the
-application to panic</li>
+<li>[core] Fixed bug where requesting the exact number of units in a range caused
+the application to panic</li>
 </ul>
-<h2>0.2.0 - 2018-10-13</h2>
+<h2>[0.2.0] - 2018-10-13</h2>
 <h3>Added</h3>
 <ul>
-<li>Requests text input</li>
-<li>Indication of software version</li>
-<li>Link to changelog</li>
+<li>[web] Requests text input</li>
+<li>[web] Indication of software version</li>
+<li>[web] Link to changelog</li>
 </ul>
 <h3>Changed</h3>
 <ul>
-<li>Moved to a new design for the page that is more responsive</li>
+<li>[web] Moved to a new design for the page that is more responsive</li>
 </ul>
 <h3>Removed</h3>
 <ul>
-<li>Test/Request button based UI</li>
+<li>[web] Test/Request button based UI</li>
 </ul>
-<h2>0.1.0 - 2018-06-06</h2>
+<h2>[0.1.0] - 2018-06-06</h2>
 <h3>Added</h3>
 <ul>
-<li>Text area to take unit string</li>
-<li>Ability to add and remove requests</li>
-<li>Ability to change request amounts</li>
+<li>[web] Text area to take unit string</li>
+<li>[web] Ability to add and remove requests</li>
+<li>[web] Ability to change request amounts</li>
 </ul>
 
         </main>

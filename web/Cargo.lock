@@ -402,7 +402,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "unit-splitter-core"
-version = "0.2.0"
+version = "0.2.2"
 dependencies = [
  "failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -412,10 +412,10 @@ dependencies = [
 
 [[package]]
 name = "unit_splitter_web"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "draco 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "unit-splitter-core 0.2.0",
+ "unit-splitter-core 0.2.2",
  "wasm-bindgen 0.2.32 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
