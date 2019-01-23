@@ -81,13 +81,13 @@ mod tests {
     #[test]
     fn format_no_name() {
         let group = Group::new("".into(), vec![Range::new(1, 50), Range::num(61)]);
-        assert_eq!(format!("{}", group), "1-50,61");
+        assert_eq!(format!("{}", group), "1-50, 61");
     }
 
     #[test]
     fn format_with_name() {
         let group = Group::new("A".into(), vec![Range::new(1, 50), Range::num(61)]);
-        assert_eq!(format!("{}", group), "A=1-50,61");
+        assert_eq!(format!("{}", group), "A=1-50, 61");
     }
 
     #[test]
@@ -96,6 +96,6 @@ mod tests {
             Group::new("A".into(), vec![Range::new(1, 50), Range::num(61)]),
             Group::new("CTRL".into(), vec![Range::new(1, 50), Range::num(61)]),
         ];
-        assert_eq!(format!("{}", Groups(&groups)), "A=1-50,61, CTRL=1-50,61");
+        assert_eq!(format!("{}", Groups(&groups)), "A=1-50, 61, CTRL=1-50, 61");
     }
 }
