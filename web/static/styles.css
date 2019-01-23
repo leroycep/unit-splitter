@@ -7,7 +7,7 @@
   .app {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr 2fr;
+    grid-template-rows: 1row 1row 2row;
     grid-column-gap: 1.5em;
     grid-template-areas:
         "inventory requests"
